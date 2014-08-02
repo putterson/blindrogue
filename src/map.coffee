@@ -32,6 +32,7 @@ class window.Map
         @rooms = []
         @objects = []
         @grid = ((new MapSquare() for _ in [0 .. w-1]) for _ in [0 .. h - 1])
+        @player = null
 
         console.log @grid.length
 
@@ -43,7 +44,10 @@ class window.Map
 
     # Map query operators
     get: (x,y) -> @grid[y][x]
-    isSolid: (x,y) -> @get(x,y).solid
+    isSolid: (x,y) -> 
+        if x < 0 or x >= @w or y < 0 or y >= @h 
+            return true
+        @get(x,y).solid
     getObject: (x,y) -> @get(x,y).object
     isBlocked: (x,y) -> @get(x,y).solid or (@getObject(x,y) != null)
 
@@ -64,6 +68,10 @@ class window.Map
             if not @isBlocked x,y
                 return [x,y]
         return null
+
+    step: () ->
+        for object in @objects
+            object.step()
 
     # Generate onto our map using rot.js 'Digger' algorithm
     generate: () ->
@@ -92,13 +100,19 @@ class window.Map
 
     # Note: node-js only!
     print: () ->
+        y = 0
         for row in @grid
             row_str = ''
+            x = 0
             for sqr in row
-                if sqr.object != null
-                    row_str += sqr.object.char
-                else
-                    row_str += sqr.char
+                if @player.seen(x, y)
+                    if sqr.object != null
+                        row_str += sqr.object.char
+                    else
+                        row_str += sqr.char
+                else 
+                    row_str += ' '
+                x += 1
             console.log row_str
-
+            y += 1
 

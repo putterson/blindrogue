@@ -98,8 +98,15 @@ map = new Map(40,40)
 map.generate()
 
 [pX, pY] = map.randEmptySquare()
-map.addObject new PlayerObj(map, '@', pX, pY)
+player = new PlayerObj(map, '@', pX, pY)
+map.addObject player
 [eX, eY] = map.randEmptySquare()
 map.addObject new MonsterObj(map, 'M', eX, eY)
+map.player = player
 
+player.computeFov()
 map.print()
+
+readline = require('readline-sync');
+answer = readline.question('What is your favorite food? :');
+console.log('Oh, so your favorite food is ' + answer);
