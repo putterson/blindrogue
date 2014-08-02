@@ -2,7 +2,7 @@
 (function() {
   var map;
 
-  map = new Map(40, 20);
+  map = new Map(40, 40);
 
   map.generate();
 
