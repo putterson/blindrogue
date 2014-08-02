@@ -5,7 +5,6 @@ class window.MapRoom
         @x2 = x2
         @y2 = y2
 
-
 class window.MapSquare
     constructor: (char) ->
         @char = char
@@ -16,11 +15,12 @@ class window.Map
         @w = w
         @h = h
         @rooms = []
-        @grid = [ [MapSquare(' ') for _ in [0 .. w-1]] for _ in [0 .. h - 1]]
+        @grid = ((new MapSquare(' ') for _ in [0 .. w-1]) for _ in [0 .. h - 1])
+        console.log @grid.length
 
     # Generate onto our map using rot.js 'Digger' algorithm
     generate: () ->
-        rotMap = new ROT.Map.Digger()
+        rotMap = new ROT.Map.Digger(@w, @h)
         for rotRoom in rotMap.getRooms()
             x1 = room.getLeft()
             y1 = room.getTop()
@@ -34,7 +34,13 @@ class window.Map
                 grid[y][x].char = ' '
             else
                 grid[y][x].char = '.'
-
+    # Note: node-js only!
+    print: () ->
+        for row in @grid
+            row_str = ''
+            for sqr in row
+                row_str += sqr.char
+            console.log row_str
 
 #    @_generateBoxes freeCells
 #    @_drawWholeMap()
