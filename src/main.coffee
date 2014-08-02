@@ -96,4 +96,10 @@
 
 map = new Map(40,40)
 map.generate()
+
+[pX, pY] = map.randEmptySquare()
+map.addObject new PlayerObj(map, '@', pX, pY)
+[eX, eY] = map.randEmptySquare()
+map.addObject new MonsterObj(map, 'M', eX, eY)
+
 map.print()
