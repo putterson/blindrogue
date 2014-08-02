@@ -18,6 +18,10 @@
 
   map.player = player;
 
+  player.computeFov();
+
+  map.print();
+
   while (true) {
     answer = readline.question('What is your action? ');
     action = parseAction(answer);
@@ -31,6 +35,7 @@
       }
       player.computeFov();
       map.print();
+      readline.question('You step forward... press any key');
     }
   }
 
