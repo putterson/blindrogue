@@ -10,8 +10,10 @@ class window.ViewState
 
 
 
-		for square in @squares
-			if obj.type == 'monster'
-				@mobs.push obj
-			else if obj.type == 'item'
-				@items.push obj
+		for [x, y] in @squares
+			obj = map.grid[x][y].object 
+			if obj != null
+				if obj.type == 'monster'
+					@mobs.push obj
+				else if obj.type == 'item'
+					@items.push obj
