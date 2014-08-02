@@ -4,8 +4,8 @@ Game =
   engine: null
   player: null
   init: ->
-    @display = new ROT.Display()
-    document.body.appendChild @display.getContainer()
+    #@display = new ROT.Display()
+    #document.body.appendChild @display.getContainer()
     @_generateMap()
     scheduler = new ROT.Scheduler.Simple()
     scheduler.add @player, true
@@ -44,11 +44,11 @@ Game =
       i++
 
   _drawWholeMap: ->
-    for key of @map
-      parts = key.split(",")
-      x = parseInt(parts[0])
-      y = parseInt(parts[1])
-      @display.draw x, y, @map[key]
+    #for key of @map
+    #  parts = key.split(",")
+    #  x = parseInt(parts[0])
+    #  y = parseInt(parts[1])
+    #  @display.draw x, y, @map[key]
 
 Player = (x, y) ->
   @_x = x
@@ -57,7 +57,7 @@ Player = (x, y) ->
 
 Player::act = ->
   Game.engine.lock()
-  window.addEventListener "keydown", this
+  # window.addEventListener "keydown", this
 
 Player::handleEvent = (e) ->
   keyMap = {}
@@ -90,6 +90,7 @@ Player::handleEvent = (e) ->
   Game.engine.unlock()
 
 Player::_draw = ->
-  Game.display.draw @_x, @_y, "@", "#ff0"
+  # Game.display.draw @_x, @_y, "@", "#ff0"
 
 Game.init()
+

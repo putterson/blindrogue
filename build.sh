@@ -9,7 +9,7 @@ cp src/*.html bin/
 #    cp "$file" bin/
 #done
 # Compile coffeescript
-for file in src/*.cs ; do
+for file in src/*.coffee ; do
     coffee -o bin/ "$file"
 done
 
@@ -19,4 +19,4 @@ for file in deps/*.js ; do
 done
 
 cd bin
-google-chrome main.html
+node noderun.js

@@ -9,8 +9,6 @@
     player: null,
     init: function() {
       var scheduler;
-      this.display = new ROT.Display();
-      document.body.appendChild(this.display.getContainer());
       this._generateMap();
       scheduler = new ROT.Scheduler.Simple();
       scheduler.add(this.player, true);
@@ -56,17 +54,7 @@
       }
       return _results;
     },
-    _drawWholeMap: function() {
-      var key, parts, x, y, _results;
-      _results = [];
-      for (key in this.map) {
-        parts = key.split(",");
-        x = parseInt(parts[0]);
-        y = parseInt(parts[1]);
-        _results.push(this.display.draw(x, y, this.map[key]));
-      }
-      return _results;
-    }
+    _drawWholeMap: function() {}
   };
 
   Player = function(x, y) {
@@ -76,8 +64,7 @@
   };
 
   Player.prototype.act = function() {
-    Game.engine.lock();
-    return window.addEventListener("keydown", this);
+    return Game.engine.lock();
   };
 
   Player.prototype.handleEvent = function(e) {
@@ -110,9 +97,7 @@
     return Game.engine.unlock();
   };
 
-  Player.prototype._draw = function() {
-    return Game.display.draw(this._x, this._y, "@", "#ff0");
-  };
+  Player.prototype._draw = function() {};
 
   Game.init();
 
