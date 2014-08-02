@@ -104,6 +104,8 @@ map.addObject player
 map.addObject new MonsterObj(map, 'M', eX, eY)
 map.player = player
 
+player.computeFov()
+map.print()
 while true
   answer = readline.question('What is your action? ');
   action = parseAction answer
@@ -115,3 +117,4 @@ while true
       break
     player.computeFov()
     map.print()
+    readline.question('You step forward... press any key')
