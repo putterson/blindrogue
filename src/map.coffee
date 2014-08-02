@@ -19,10 +19,12 @@ class window.MapDoor
         @y = y
 
 class window.MapSquare
-    constructor: (char = '#', solid = true, object = null) ->
+    constructor: (char = '#', solid = true, object = null, wasSeen = false) ->
         @char = char
         @solid = solid
         @object = object
+        # Was the square ever seen?
+        @wasSeen = wasSeen
 
 class window.Map
     # Create a map that is filled with nothing
@@ -105,13 +107,16 @@ class window.Map
             row_str = ''
             x = 0
             for sqr in row
-                if @player.seen(x, y)
+                seen = @player.seen(x, y)
+                char = ' '
+                if seen or sqr.wasSeen
                     if sqr.object != null
-                        row_str += sqr.object.char
+                        char = sqr.object.char
                     else
-                        row_str += sqr.char
-                else 
-                    row_str += ' '
+                        char = sqr.char
+                    if not seen
+                        char = clc.blackBright(char)
+                row_str += char
                 x += 1
             console.log row_str
             y += 1

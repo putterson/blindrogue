@@ -104,9 +104,14 @@ map.addObject player
 map.addObject new MonsterObj(map, 'M', eX, eY)
 map.player = player
 
-player.computeFov()
-map.print()
-
-readline = require('readline-sync');
-answer = readline.question('What is your favorite food? :');
-console.log('Oh, so your favorite food is ' + answer);
+while true
+  answer = readline.question('What is your action? ');
+  action = parseAction answer
+  if typeof action == 'string'
+    console.log action
+    continue
+  while true 
+    if not action.step(player)
+      break
+    player.computeFov()
+    map.print()

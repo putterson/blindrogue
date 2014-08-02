@@ -5,6 +5,11 @@ class window.BaseObj
         @char = char
         @x = x
         @y = y
+    move: (dx, dy) ->
+        @map.get(@x, @y).object = null
+        @x += dx
+        @y += dy
+        @map.get(@x, @y).object = this
     step: () ->
         # Nothing by default
 
@@ -27,6 +32,7 @@ class window.PlayerObj extends BaseObj
         p = this
         @fov.compute @x, @y, @visionSqrs, (x,y,r,vis) ->
             if vis > 0
+                p.map.get(x,y).wasSeen = true
                 p.seenSqrs.push [x,y]
 
 class window.MonsterObj extends BaseObj
