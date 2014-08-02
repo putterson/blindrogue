@@ -19,7 +19,7 @@ class window.MapDoor
         @y = y
 
 class window.MapSquare
-    constructor: (char = ' ', solid = true, object = null) ->
+    constructor: (char = '#', solid = true, object = null) ->
         @char = char
         @solid = solid
         @object = object
@@ -84,7 +84,7 @@ class window.Map
                 sqr.char = '.'
                 sqr.solid = false
             else
-                sqr.char = ' '
+                sqr.char = '#'
                 sqr.solid = true
 
         for rotRoom in rotMap.getRooms()
