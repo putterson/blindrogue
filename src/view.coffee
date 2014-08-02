@@ -8,8 +8,6 @@ class window.ViewState
 		@x = map.player.x
 		@y = map.player.y
 
-
-
 		for [x, y] in @squares
 			obj = map.grid[x][y].object 
 			if obj != null
