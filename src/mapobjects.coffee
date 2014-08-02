@@ -27,7 +27,7 @@ class window.PlayerObj extends BaseObj
         p = this
         @fov.compute @x, @y, @visionSqrs, (x,y,r,vis) ->
             if vis > 0
-                p.seenSqrs.push {x,y}
+                p.seenSqrs.push [x,y]
 
 class window.MonsterObj extends BaseObj
     constructor: (map, char, x, y) ->
