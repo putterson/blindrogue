@@ -97,15 +97,23 @@
 map = new Map(40,40)
 map.generate()
 
+
 [pX, pY] = map.randEmptySquare()
 player = new PlayerObj(map, '@', pX, pY)
 map.addObject player
-[eX, eY] = map.randEmptySquare()
-map.addObject new MonsterObj(map, 'M', eX, eY)
+
+for _ in [1..10]
+	[eX, eY] = map.randEmptySquare()
+	map.addObject new MonsterObj(map, 'M', eX, eY)
+
 map.player = player
 
 player.computeFov()
 map.print()
+
+view = new ViewDescriber(map)
+console.log view.describe()
+
 while true
   answer = readline.question('What is your action? ');
   action = parseAction answer
@@ -116,5 +124,8 @@ while true
     if not action.step(player)
       break
     player.computeFov()
+    messages = view.step()
     map.print()
+    for m in messages
+    	console.log m
     readline.question('You step forward... press any key')

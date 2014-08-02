@@ -12,7 +12,7 @@ class window.BaseObj
         @map.get(@x, @y).object = this
     step: () ->
         # Nothing by default
-asdsa()
+
 class window.PlayerObj extends BaseObj
     constructor: (map, char, x, y) ->
         super(map, char, x,y)
