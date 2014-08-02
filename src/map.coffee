@@ -19,8 +19,10 @@ class window.MapDoor
         @y = y
 
 class window.MapSquare
-    constructor: (char) ->
+    constructor: (char = ' ', solid = true, object = null) ->
         @char = char
+        @solid = solid
+        @object = object
 
 class window.Map
     # Create a map that is filled with nothing
@@ -28,15 +30,40 @@ class window.Map
         @w = w
         @h = h
         @rooms = []
-        @doors = []
-        @grid = ((new MapSquare(' ') for _ in [0 .. w-1]) for _ in [0 .. h - 1])
+        @objects = []
+        @grid = ((new MapSquare() for _ in [0 .. w-1]) for _ in [0 .. h - 1])
+
         console.log @grid.length
 
-    within_room: (x,y) ->
+    withinRoom: (x,y) ->
         for room in @rooms
             if room.within(x,y)
                 return true
         return false
+
+    # Map query operators
+    get: (x,y) -> @grid[y][x]
+    isSolid: (x,y) -> @get(x,y).solid
+    getObject: (x,y) -> @get(x,y).object
+    isBlocked: (x,y) -> @get(x,y).solid or (@getObject(x,y) != null)
+
+    # Object operators
+    addObject: (obj) ->
+        @get(obj.x, obj.y).object = obj
+        @objects.push obj
+    removeObject: (obj) ->
+        @get(obj.x, obj.y).object = obj
+        @objects.push obj
+
+    # Generation helpers
+    randEmptySquare: () ->
+        # Try 10000 times:
+        for _ in [1..10000]
+            x = randInt(0, @w)
+            y = randInt(0, @h)
+            if not @isBlocked x,y
+                return [x,y]
+        return null
 
     # Generate onto our map using rot.js 'Digger' algorithm
     generate: () ->
@@ -44,12 +71,13 @@ class window.Map
 
         map = this
         rotMap.create (x,y,val) -> 
-            if val == 1
-                map.grid[y][x].char = '.'
+            sqr = map.get(x,y)
+            if val == 0
+                sqr.char = '.'
+                sqr.solid = false
             else
-                map.grid[y][x].char = ' '
-
-
+                sqr.char = ' '
+                sqr.solid = true
 
         for rotRoom in rotMap.getRooms()
             x1 = rotRoom.getLeft()
@@ -67,7 +95,10 @@ class window.Map
         for row in @grid
             row_str = ''
             for sqr in row
-                row_str += sqr.char
+                if sqr.object != null
+                    row_str += sqr.object.char
+                else
+                    row_str += sqr.char
             console.log row_str
 
 
