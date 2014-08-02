@@ -5,6 +5,11 @@ class window.MapRoom
         @x2 = x2
         @y2 = y2
 
+class window.MapDoor
+    constructor: (x, y) ->
+        @x = x
+        @y = y
+
 class window.MapSquare
     constructor: (char) ->
         @char = char
