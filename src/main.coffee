@@ -95,37 +95,49 @@
 # Game.init()
 
 map = new Map(40,40)
-map.generate()
 
+generateMap = () ->
+  map.generate()
 
-[pX, pY] = map.randEmptySquare()
-player = new PlayerObj(map, '@', pX, pY)
-map.addObject player
+  [pX, pY] = map.randEmptySquare()
+  player = new PlayerObj(map, '@', pX, pY)
+  map.addObject player
 
-for _ in [1..10]
-	[eX, eY] = map.randEmptySquare()
-	map.addObject new MonsterObj(map, 'M', eX, eY)
+  for _ in [1..10]
+  	[eX, eY] = map.randEmptySquare()
+  	map.addObject new MonsterObj(map, MONSTERS["Keukegen"], eX, eY)
 
-map.player = player
+  map.player = player
+  # Compute initial FOV:
+  player.computeFov()
 
-player.computeFov()
-map.print()
-
+generateMap()
 view = new ViewDescriber(map)
+
+stepWithAction = (action) ->
+  # If we have a valid action:
+  player = map.player
+  # Copy over the player action, for the step event
+  player.action = action
+  while action.canPerform(player) 
+    map.step()
+    # Report anything new for this step
+    # TODO check for interruptions
+    messages = view.step()
+    for m in messages
+      console.log m
+  # Reset the player action (make sure we don't accidentally use it again)
+  player.action = null
+  map.print()
+
+map.print()
 console.log view.describe()
 
 while true
   answer = readline.question('What is your action? ');
   action = parseAction answer
+  # Did we encounter an error during parsing?
   if typeof action == 'string'
     console.log action
-    continue
-  while true 
-    if not action.step(player)
-      break
-    player.computeFov()
-    messages = view.step()
-    map.print()
-    for m in messages
-    	console.log m
-    readline.question('You step forward... press any key')
+  else
+    stepWithAction(action)

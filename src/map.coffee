@@ -35,6 +35,7 @@ class window.Map
         @objects = []
         @grid = ((new MapSquare() for _ in [0 .. w-1]) for _ in [0 .. h - 1])
         @player = null
+        @frame = 1
 
         console.log @grid.length
 
@@ -74,6 +75,7 @@ class window.Map
     step: () ->
         for object in @objects
             object.step()
+        @frame++
 
     # Generate onto our map using rot.js 'Digger' algorithm
     generate: () ->
@@ -100,24 +102,30 @@ class window.Map
                 map.grid[y][x].char = 'E'
             @rooms.push room
 
-    # Note: node-js only!
+    # Note: console.log is node-js only!
     print: () ->
+        console.log "FRAME #{@frame}"
         y = 0
+        sep = ''
+        for _ in [0..@w + 1]
+            sep += '-'
+        console.log sep
         for row in @grid
-            row_str = ''
+            row_str = '|'
             x = 0
             for sqr in row
                 seen = @player.seen(x, y)
                 char = ' '
                 if seen or sqr.wasSeen
                     if sqr.object != null
-                        char = sqr.object.char
+                        char = sqr.object.consoleRepr()
                     else
                         char = sqr.char
                     if not seen
                         char = clc.blackBright(char)
                 row_str += char
                 x += 1
-            console.log row_str
+            console.log row_str + '|'
             y += 1
+        console.log sep
 

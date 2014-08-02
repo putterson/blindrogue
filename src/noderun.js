@@ -8,6 +8,7 @@ window.readline = require('readline-sync')
 window.clc = require('cli-color')
 
 require('./global_utils.coffee')
+require('./data.coffee')
 require('./map.coffee')
 require('./mapobjects.coffee')
 require('./actionparse.coffee')

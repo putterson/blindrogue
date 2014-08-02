@@ -4,7 +4,7 @@ class window.MoveAction
 		@dx = dx
 		@dy = dy
 
-	# Returns nil if no good direction could be found
+	# Returns null if no good direction could be found
 	_findDirection: (player) ->
 		free = (dx, dy) -> not player.map.isBlocked(player.x + dx, player.y + dy)
 		if free(@dx, @dy) 
@@ -24,20 +24,22 @@ class window.MoveAction
 				return [@dx,  0]
 			if free(0, @dy) 
 				return [0, @dy]
-		return [0,0]
+		return null
 
-	step: (player) ->
+	canPerform: (player) ->
 		if @nSteps <= 0 
 			# Need new action
 			return false
+		if not @_findDirection(player)
+			return false
+		return true
+
+	perform: (player) ->
+		# Assumes canPerform!
+		assert @canPerform(player)
 		@nSteps--
 		[dx, dy] = @_findDirection(player)
-		if dx == 0 and dy == 0
-			# Need new direction
-			return false
 		player.move(dx, dy)
-		# Keep going
-		return true
 
 parseDirection = (dir) ->
 	if dir in ["n", "north", "up", "u"]
@@ -59,12 +61,17 @@ parseDirection = (dir) ->
 		return [-1,1]
 	return null
 
+MOVE_WORDS = ["g", "go", "m", "move"]
+STEP_WORDS = ["s", "step"]
+
 window.parseAction = (line) ->
 	parts = line.split(" ")
 	verb = parts[0].toLowerCase()
-	if verb in ["g", "go", "m", "move"]
+	isMove = (verb in MOVE_WORDS) 
+	isStep = (verb in STEP_WORDS)
+	if isMove or isStep
 		dir = parseDirection(parts[1].toLowerCase())
 		if dir == null
 			return "Direction " + parts[1] + " could not be understood!"
-		return new MoveAction(3, dir[0], dir[1])
+		return new MoveAction((if isStep then 1 else 3), dir[0], dir[1])
 	return "Action could not be understood!"
