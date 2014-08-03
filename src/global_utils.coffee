@@ -7,6 +7,10 @@ window.randInt = (min, max) ->
 window.randChance = (chance) -> 
 	return (ROT.RNG.getUniform() < chance)
 
+window.randChoose = (choices) -> 
+	choice = randInt(0, choices.length)
+	return choices[choice]
+
 window.assert = (condition, message = "Assertion failed") ->
     if not condition
         throw message

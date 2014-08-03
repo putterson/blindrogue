@@ -14,11 +14,11 @@ class window.BaseObj
     step: () ->
         # Nothing by default
 
-class window.CombatObject extends BaseObj
+class window.CombatObj extends BaseObj
     constructor: (map, stats, char, x, y) ->
         super(map, char, x,y)
 
-class window.PlayerObj extends CombatObject
+class window.PlayerObj extends CombatObj
     constructor: (map, char, x, y) ->
         super(map, null, char, x,y)
         # Create the PreciseShadowcasting
@@ -45,9 +45,15 @@ class window.PlayerObj extends CombatObject
                 p.map.get(x,y).wasSeen = true
                 p.seenSqrs.push [x,y]
 
-class window.MonsterObj extends CombatObject
+class window.MonsterObj extends CombatObj
     constructor: (map, @monsterType, x, y) ->
         super(map, null, @monsterType.char, x,y)
 
     step: () -> null
     consoleRepr: () -> clc.redBright(@char)
+
+class window.ItemObj extends BaseObj
+    constructor: (map, @itemType, x, y) ->
+        super(map, @itemType.char, x,y)
+
+    consoleRepr: () -> clc.blueBright(@char)

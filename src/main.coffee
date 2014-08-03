@@ -107,6 +107,11 @@ generateMap = () ->
   	[eX, eY] = map.randEmptySquare()
   	map.addObject new MonsterObj(map, MONSTERS["Keukegen"], eX, eY)
 
+  for _ in [1..10]
+    [iX, iY] = map.randEmptySquare()
+    itemName = randChoose ["Potion of Health", "Bō", "Amulet of Staffing"]
+    map.addObject new ItemObj(map, ITEMS[itemName], iX, iY)
+
   map.player = player
   # Compute initial FOV:
   player.computeFov()
