@@ -120,6 +120,7 @@ generateMap()
 view = new ViewDescriber(map)
 
 stepWithAction = (action) ->
+  messages = []
   # If we have a valid action:
   player = map.player
   # Copy over the player action, for the step event
@@ -128,7 +129,7 @@ stepWithAction = (action) ->
     map.step()
     # Report anything new for this step
     # TODO check for interruptions
-    messages = view.step()
+    messages = messages.concat view.step()
   # Reset the player action (make sure we don't accidentally use it again)
   player.action = null
   map.print()

@@ -13,6 +13,11 @@ class window.MapRoom
         @y2 = y2
         @doors = []
 
+    size: () -> [
+        (@x2 - @x1 + 1)
+        (@y2 - @y1 + 1)
+    ]
+
 class window.MapDoor
     constructor: (x, y) ->
         @x = x

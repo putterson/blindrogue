@@ -67,21 +67,23 @@ LOOK_WORDS = ["look", "describe"]
 
 window.parseAction = (line) ->
 	parts = line.split(" ")
+	verb = parts[0].toLowerCase()
 	if parts.length >= 2
 		# Create the last verb by gluing together the last components
-		verb = parts[0].toLowerCase()
 		rest = ''
 		for i in [1 ..  parts.length-1]
 			rest += parts[i]
 
 		isMove = (verb in MOVE_WORDS) 
 		isStep = (verb in STEP_WORDS)
-		isLook = (verb in LOOK_WORDS)
+		
 		if isMove or isStep
 			dir = parseDirection(rest.toLowerCase())
 			if dir == null
 				return "Direction " + parts[1] + " could not be understood!"
 			return new MoveAction((if isStep then 1 else 3), dir[0], dir[1])
+	else if parts.length == 1
+		isLook = (verb in LOOK_WORDS)
 		if isLook
 			return "describe"
 	return "Action could not be understood!"
