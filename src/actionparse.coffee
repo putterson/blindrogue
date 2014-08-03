@@ -1,6 +1,7 @@
 class window.MoveAction
 	constructor: (nSteps, dx, dy) ->
 		@nSteps = nSteps
+		@hasPerformed = false
 		@dx = dx
 		@dy = dy
 
@@ -27,6 +28,9 @@ class window.MoveAction
 		return null
 
 	canPerform: (player) ->
+		if @hasPerformed and player.map.objectTypeSeen(MonsterObj)
+			# Only one step allowed when monsters nearby
+			return false
 		if @nSteps <= 0 
 			# Need new action
 			return false
@@ -38,8 +42,16 @@ class window.MoveAction
 		# Assumes canPerform!
 		assert @canPerform(player)
 		@nSteps--
+		@hasPerformed = true
 		[dx, dy] = @_findDirection(player)
 		player.move(dx, dy)
+
+# Returns a string without a component, if the string starts with a component
+tryParse = (text, words) ->
+	for word in words
+		if text.indexOf(word) == 0 # Starts with it
+			return text.substring(word.length)
+	return null
 
 parseDirection = (dir) ->
 	if dir in ["n", "north", "up", "u"]
@@ -51,39 +63,38 @@ parseDirection = (dir) ->
 	if dir in ["w", "west", "left", "l"]
 		return [-1,0]
 
-	if dir in ["ne", "northeast", "upright", "ur"]
+	if dir in ["ne", "en", "northeast", "upright", "rightdown", "ur", "ru"]
 		return [1,-1]
-	if dir in ["nw", "northwest", "upleft", "ul"]
+	if dir in ["nw", "wn", "northwest", "upleft", "leftup", "ul", "lu"]
 		return [-1,-1]
-	if dir in ["se", "southeast", "downright", "dr"]
+	if dir in ["se", "es", "southeast", "downright", "rightdown", "dr", "rd"]
 		return [1,1]
-	if dir in ["sw", "southwest", "downleft", "dl"]
+	if dir in ["sw", "ws", "southwest", "downleft", "leftdown", "dl", "ld"]
 		return [-1,1]
 	return null
 
-MOVE_WORDS = ["g", "go", "m", "move"]
-STEP_WORDS = ["s", "step"]
-LOOK_WORDS = ["look", "describe"]
+MOVE_WORDS = ["move", "go", "g", "m"]
+STEP_WORDS = ["step"]
+LOOK_WORDS = ["look", "describe", "l", "d"]
 
 window.parseAction = (line) ->
-	parts = line.split(" ")
-	verb = parts[0].toLowerCase()
-	if parts.length >= 2
-		# Create the last verb by gluing together the last components
-		rest = ''
-		for i in [1 ..  parts.length-1]
-			rest += parts[i]
+	# Remove withspace, and lower-case the string
+	line = line.replace(new RegExp(' ', 'g'),'').toLowerCase(); 
 
-		isMove = (verb in MOVE_WORDS) 
-		isStep = (verb in STEP_WORDS)
-		
-		if isMove or isStep
-			dir = parseDirection(rest.toLowerCase())
-			if dir == null
-				return "Direction " + parts[1] + " could not be understood!"
-			return new MoveAction((if isStep then 1 else 3), dir[0], dir[1])
-	else if parts.length == 1
-		isLook = (verb in LOOK_WORDS)
-		if isLook
-			return "describe"
+	# Try to parse the start of various actions.
+	# Assignment intentional in if-statements.
+	if (restLine = tryParse(line, MOVE_WORDS))
+		# Try a short range travel
+		dir = parseDirection(restLine)
+		if dir == null
+			return "Direction " +restLine+ " could not be understood!"
+		return new MoveAction(3, dir[0], dir[1])
+	else if (restLine = tryParse(line, STEP_WORDS))
+		# Try a step
+		dir = parseDirection(restLine)
+		if dir == null
+			return "Direction " + restLine + " could not be understood!"
+		return new MoveAction(1, dir[0], dir[1])
+	else if line in LOOK_WORDS
+		return "describe"
 	return "Action could not be understood!"

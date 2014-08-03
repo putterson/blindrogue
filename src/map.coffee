@@ -68,6 +68,11 @@ class window.Map
         if x < 0 or x >= @w or y < 0 or y >= @h 
             return true
         @get(x,y).solid
+    objectTypeSeen: (type) ->
+        for obj in @objects
+            if obj instanceof type and @isSeen(obj.x, obj.y)
+                return true
+        return false
     getObjects: (x,y) -> @get(x,y).objects
     # Returns 'null' if no solid object exists
     getSolidObject: (x, y) ->

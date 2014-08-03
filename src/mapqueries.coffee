@@ -56,3 +56,4 @@ window.objDirTowards = (obj1, obj2, usePlayerSight = false) ->
 		return null
 	[tx, ty] = pathSquares[1]
 	return [tx - obj1.x, ty - obj1.y]
+
