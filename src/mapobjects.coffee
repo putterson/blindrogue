@@ -5,16 +5,18 @@ class window.BaseObj
         @char = char
         @x = x
         @y = y
+    solid: false
     move: (dx, dy) ->
-        @map.get(@x, @y).object = null
+        @map.get(@x, @y).removeObject this
         @x += dx
         @y += dy
-        @map.get(@x, @y).object = this
+        @map.get(@x, @y).addObject this
     consoleRepr: () -> @char
     step: () ->
         # Nothing by default
 
 class window.CombatObj extends BaseObj
+    solid: true
     constructor: (map, stats, char, x, y) ->
         super(map, char, x,y)
 

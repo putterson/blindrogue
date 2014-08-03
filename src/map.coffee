@@ -19,12 +19,14 @@ class window.MapDoor
         @y = y
 
 class window.MapSquare
-    constructor: (char = '#', solid = true, object = null, wasSeen = false) ->
+    constructor: (char = '#', solid = true, wasSeen = false) ->
         @char = char
         @solid = solid
-        @object = object
+        @objects = []
         # Was the square ever seen?
         @wasSeen = wasSeen
+    addObject: (obj) -> @objects.push obj
+    removeObject: (obj) -> elemRemove @objects, obj
 
 class window.Map
     # Create a map that is filled with nothing
@@ -51,16 +53,31 @@ class window.Map
         if x < 0 or x >= @w or y < 0 or y >= @h 
             return true
         @get(x,y).solid
-    getObject: (x,y) -> @get(x,y).object
-    isBlocked: (x,y) -> @get(x,y).solid or (@getObject(x,y) != null)
+    getObjects: (x,y) -> @get(x,y).objects
+    # Returns 'null' if no solid object exists
+    getSolidObject: (x, y) ->
+        for obj in @getObjects(x,y)
+            if obj.solid
+                return obj
+        return null
+
+    # For purposes of drawing mainly
+    getTopObject: (x, y) ->
+        objs = @getObjects(x,y)
+        len = objs.length
+        if len == 0
+            return null
+        return objs[len - 1]
+
+    isBlocked: (x,y) -> @get(x,y).solid or (@getSolidObject(x,y) != null)
 
     # Object operators
     addObject: (obj) ->
-        @get(obj.x, obj.y).object = obj
+        @get(obj.x, obj.y).addObject obj
         @objects.push obj
     removeObject: (obj) ->
-        @get(obj.x, obj.y).object = obj
-        @objects.push obj
+        @get(obj.x, obj.y).removeObject obj
+        elemRemove @objects, obj
 
     # Generation helpers
     randEmptySquare: () ->
@@ -117,8 +134,12 @@ class window.Map
                 seen = @player.seen(x, y)
                 char = ' '
                 if seen or sqr.wasSeen
-                    if sqr.object != null
-                        char = sqr.object.consoleRepr()
+                    # First try to draw a solid object:
+                    obj = @getSolidObject(x, y)
+                    if obj == null
+                        obj = @getTopObject(x, y)
+                    if obj != null
+                        char = obj.consoleRepr()
                     else
                         char = sqr.char
                     if not seen

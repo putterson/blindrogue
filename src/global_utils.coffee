@@ -14,3 +14,8 @@ window.randChoose = (choices) ->
 window.assert = (condition, message = "Assertion failed") ->
     if not condition
         throw message
+
+window.elemRemove = (array, elem) ->
+	index = array.indexOf(elem)
+	if index > -1
+    	array.splice(index, 1)
