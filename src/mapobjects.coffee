@@ -17,12 +17,13 @@ class window.BaseObj
 
 class window.CombatObj extends BaseObj
     solid: true
-    constructor: (map, stats, char, x, y) ->
+    constructor: (map, @rawStats, char, x, y) ->
         super(map, char, x,y)
+    getStats: () -> new Stats(@, @rawStats)
 
 class window.PlayerObj extends CombatObj
     constructor: (map, char, x, y) ->
-        super(map, null, char, x,y)
+        super(map, makeStatsFromData(PLAYER_START_STATS), char, x,y)
         # Create the PreciseShadowcasting
         @fov = new ROT.FOV.PreciseShadowcasting (x, y) ->
             return not map.isSolid(x,y)
@@ -30,6 +31,9 @@ class window.PlayerObj extends CombatObj
         @seenSqrs = []
         @action = null
 
+    getName: () -> "ludderson"
+    # Used at the start of a sentence
+    wrapRegularVerb: (verb) -> "You #{verb}"
     step: () ->
         @action.perform(@)
         @computeFov()
@@ -49,10 +53,14 @@ class window.PlayerObj extends CombatObj
 
 class window.MonsterObj extends CombatObj
     constructor: (map, @monsterType, x, y) ->
-        super(map, null, @monsterType.char, x,y)
+        super(map, makeStatsFromData(@monsterType), @monsterType.char, x,y)
 
+    getName: () -> @monsterType.name
+    wrapRegularVerb: (verb) -> "The #{@getName()} #{verb}s"
     step: () -> null
     consoleRepr: () -> clc.redBright(@char)
+    # Used at the start of a sentence
+    getNameReference: () -> "The " + @getName()
 
 class window.ItemObj extends BaseObj
     constructor: (map, @itemType, x, y) ->

@@ -23,6 +23,25 @@ Amulet = (data) ->
 	Item(data)
 
 ###########################################
+# Define player starting stats
+###########################################
+
+window.PLAYER_START_STATS = {
+	hp: 10
+	mp: 0
+	# 'Base' armour class -- does not account for starting equipment
+	armourClass: 0
+
+	# 'Unarmed' attack information
+	attack: {
+		damage: 1
+		hitChance: 5
+		attackHitDescription: ["You kick the $ENEMY", "You punch the $ENEMY"]
+		attackMissDescription: ["You try to kick the $ENEMY, but are blocked!", "You try to punch the $ENEMY, but miss!"]
+	}
+}
+
+###########################################
 # Define monster data
 ###########################################
 
@@ -33,7 +52,22 @@ Monster {
 	appears: "You spot a fluffy, hostile $NAME!"
 
 	hp: 10
-	speed: 0.75
+	mp: 0
+	armourClass: 0
+
+	# 'Unarmed' attack information
+	attack: {
+		damage: 1
+		hitChance: 5
+		attackHitDescription: [
+			"The $NAME bites your foot!"
+			"The $NAME leaps and claws you!"
+		]
+		attackMissDescription: [
+			"The $NAME tries to bite you, but you block it!"
+			"The $NAME tries to leap, but you kick it away!"
+		]
+	}
 }
 
 ###########################################
@@ -68,6 +102,7 @@ Weapon {
 	appears: "You spot a long wooden $NAME!"
 
 	damage: 5
+	accuracy: 5
 	onCalculate: (stats) -> 
 		stats.derived.attack = {
 			damage: @attack

@@ -96,6 +96,8 @@
 
 map = new Map(40,40)
 
+readline.question('What is your action? ');
+
 generateMap = () ->
   map.generate()
 
