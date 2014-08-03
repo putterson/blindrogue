@@ -17,7 +17,7 @@
 #     freeCells = []
 #     digCallback = (x, y, value) ->
 #       if value 
-#       	return
+#           return
 #       key = x + "," + y
 #       @map[key] = "."
 #       freeCells.push key
@@ -73,7 +73,7 @@
   
 #   # one of numpad directions? 
 #   if !(code of keyMap)
-#   	return
+#       return
   
 #   # is there a free space? 
 #   dir = ROT.DIRS[8][keyMap[code]]
@@ -81,7 +81,7 @@
 #   newY = @_y + dir[1]
 #   newKey = newX + "," + newY
 #   if !(newKey of Game.map)
-#   	return
+#       return
 #   Game.display.draw(@_x, @_y, Game.map[@_x + "," + @_y])
 #   @_x = newX
 #   @_y = newY
@@ -106,8 +106,8 @@ generateMap = () ->
   map.addObject player
 
   for _ in [1..10]
-  	[eX, eY] = map.randEmptySquare()
-  	map.addObject new MonsterObj(map, MONSTERS["Keukegen"], eX, eY)
+    [eX, eY] = map.randEmptySquare()
+    map.addObject new MonsterObj(map, MONSTERS["Keukegen"], eX, eY)
 
   for _ in [1..10]
     [iX, iY] = map.randEmptySquare()
@@ -136,23 +136,22 @@ stepWithAction = (action) ->
   player.action = null
   map.print()
   for m in messages
- 	  console.log m
+      console.log m
   for event in map.getAndResetEvents()
     console.log event
 
-
 map.print()
 for m in view.describe()
-	console.log m
+    console.log m
 
 while true
   answer = readline.question('What is your action? ');
-  action = parseAction answer
+  action = parseAction(map, answer)
   # Did we encounter an error during parsing?
   if typeof action == 'string'
-  	if action == "describe"
-  		console.log view.describe().join("\n")
-  		continue
-    console.log action
+    if action == "describe"
+      console.log view.describe().join("\n")
+    else
+      console.log action
   else
     stepWithAction(action)

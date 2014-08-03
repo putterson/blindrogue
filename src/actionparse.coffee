@@ -73,11 +73,21 @@ parseDirection = (dir) ->
 		return [-1,1]
 	return null
 
+createMoveIfPossible = (map, steps, [dx, dy]) ->
+	action = new MoveAction(steps, dx, dy)
+	if action.canPerform(map.player)
+		return action
+	# Otherwise, return error message
+	return describeBlockingSquare(map, map.player.x + dx, map.player.y + dy)
+
+parseTarget = (restLine) ->
+
 MOVE_WORDS = ["move", "go", "g", "m"]
+ATTACK_WORDS = ["attack", "fight", "a", "f"]
 STEP_WORDS = ["step"]
 LOOK_WORDS = ["look", "describe", "l", "d"]
 
-window.parseAction = (line) ->
+window.parseAction = (map, line) ->
 	# Remove withspace, and lower-case the string
 	line = line.replace(new RegExp(' ', 'g'),'').toLowerCase(); 
 
@@ -88,13 +98,17 @@ window.parseAction = (line) ->
 		dir = parseDirection(restLine)
 		if dir == null
 			return "Direction " +restLine+ " could not be understood!"
-		return new MoveAction(3, dir[0], dir[1])
+		return createMoveIfPossible map, 3, dir
 	else if (restLine = tryParse(line, STEP_WORDS))
 		# Try a step
 		dir = parseDirection(restLine)
 		if dir == null
 			return "Direction " + restLine + " could not be understood!"
-		return new MoveAction(1, dir[0], dir[1])
+		return createMoveIfPossible map, 1, dir
+	else if (restLine = tryParse(line, ATTACK_WORDS))
+		target = parseTarget restLine
+		if typeof target == 'string'
+		 	return target
 	else if line in LOOK_WORDS
 		return "describe"
 	return "Action could not be understood!"

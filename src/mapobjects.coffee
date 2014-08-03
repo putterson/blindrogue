@@ -11,6 +11,10 @@ class window.BaseObj
         @x += dx
         @y += dy
         @map.get(@x, @y).addObject this
+    distanceTo: (x, y) ->
+        dx = @x - x
+        dy = @y - y
+        return Math.sqrt(dx*dx + dy*dy)
     consoleRepr: () -> @char
     step: () ->
         # Nothing by default

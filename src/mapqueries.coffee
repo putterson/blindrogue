@@ -16,12 +16,15 @@ window.objOrthoSquaresNear = (obj) -> [
 		[obj.x, obj.y + 1]
 	]
 
-window.objSquaresNear = (obj) -> objDiagSquaresNear(obj).concat(objOrthoSquaresNear(obj))
+window.objSquaresNear = (obj) -> 
+	objDiagSquaresNear(obj).concat(objOrthoSquaresNear(obj))
 
 window.objNearby = (obj, type) ->
 	for [x,y] in objSquaresNear(obj)
 		for other in obj.map.getObjects(x, y)
-			if other instanceof type
+			if other == type
+				return other
+			if typeof type == 'function' and other instanceof type
 				return other
 	return null
 
@@ -56,4 +59,3 @@ window.objDirTowards = (obj1, obj2, usePlayerSight = false) ->
 		return null
 	[tx, ty] = pathSquares[1]
 	return [tx - obj1.x, ty - obj1.y]
-

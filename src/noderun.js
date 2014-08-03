@@ -9,6 +9,7 @@ window.clc = require('cli-color')
 
 require('./global_utils.coffee')
 require('./data.coffee')
+require('./describe.coffee')
 require('./mapqueries.coffee')
 require('./stats.coffee')
 require('./map.coffee')

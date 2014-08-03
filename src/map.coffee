@@ -64,6 +64,17 @@ class window.Map
             if sx == x and sy == y
                 return true
         return false
+
+    # Seen objects of a certain type, sorted by proximity to player
+    seenObjects: (type) ->
+        {x: px, y: py} = map.player
+        seen = []
+        for obj in @objects
+            if obj instanceof type
+                seen.push obj
+        seen.sort (a,b) -> 
+            return a.distanceTo(px, py) - b.distanceTo(px, py) 
+        return seen
     isSolid: (x,y) -> 
         if x < 0 or x >= @w or y < 0 or y >= @h 
             return true
@@ -110,8 +121,12 @@ class window.Map
         return null
 
     step: () ->
+        # Ensure player goes first (otherwise action may not reflect information reported to player)
+        @player.step()
         for object in @objects
-            object.step()
+            # Ensure player does not go twice
+            if not (object instanceof PlayerObj)
+                object.step()
         @frame++
 
     # Generate onto our map using rot.js 'Digger' algorithm
