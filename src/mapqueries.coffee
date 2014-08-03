@@ -32,3 +32,27 @@ window.objIsInCorner = (obj) ->
 		if map.isSolid(x, y) and map.isSolid(obj.x, y) and map.isSolid(x, obj.y)
 			return true
 	return false
+
+# Returns the next step towards the monster. Uses pathfinding. Nil if no path
+window.objDirTowards = (obj1, obj2, usePlayerSight = false) ->
+	map = obj1.map
+	passable = (x,y) ->
+		if (obj2.x == x and obj2.y == y) or (obj1.x == x and obj1.y == y) 
+			return true # Exemption for target square
+		return not map.isBlocked(x,y)
+	playerPassable = (x,y) ->
+		if (obj2.x == x and obj2.y == y) or (obj1.x == x and obj1.y == y) 
+			return true # Exemption for target square
+		if map.isSeen(x,y)
+			return not map.isBlocked(x,y)
+		else if map.wasSeen(x,y)
+			return not map.isSolid(x,y)
+		else 
+			return false
+	astar = new ROT.Path.AStar(obj2.x, obj2.y, if usePlayerSight then playerPassable else passable)
+	pathSquares = []
+	astar.compute(obj1.x, obj1.y, (x, y) -> pathSquares.push [x,y])
+	if pathSquares.length <= 1 
+		return null
+	[tx, ty] = pathSquares[1]
+	return [tx - obj1.x, ty - obj1.y]

@@ -43,8 +43,12 @@ class window.Map
         @grid = ((new MapSquare() for _ in [0 .. w-1]) for _ in [0 .. h - 1])
         @player = null
         @frame = 1
+        @events = []
 
-        console.log @grid.length
+    getAndResetEvents: () ->
+        oldEvents = @events
+        @events = []
+        return oldEvents
 
     withinRoom: (x,y) ->
         for room in @rooms
@@ -54,6 +58,12 @@ class window.Map
 
     # Map query operators
     get: (x,y) -> @grid[y][x]
+    wasSeen: (x,y) -> @get(x,y).wasSeen
+    isSeen: (x,y) -> 
+        for [sx, sy] in @player.seenSqrs
+            if sx == x and sy == y
+                return true
+        return false
     isSolid: (x,y) -> 
         if x < 0 or x >= @w or y < 0 or y >= @h 
             return true
@@ -143,7 +153,7 @@ class window.Map
                     obj = @getSolidObject(x, y)
                     if obj == null
                         obj = @getTopObject(x, y)
-                    if obj != null
+                    if seen and obj != null
                         char = obj.consoleRepr()
                     else
                         char = sqr.char

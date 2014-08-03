@@ -54,14 +54,31 @@ class window.PlayerObj extends CombatObj
 class window.MonsterObj extends CombatObj
     constructor: (map, @monsterType, x, y) ->
         super(map, makeStatsFromData(@monsterType), @monsterType.char, x,y)
+        @chasingPlayer = false
+        # How long to chase without sight before giving up?
+        @chasingTimeout = 0
 
     getName: () -> @monsterType.name
     wrapRegularVerb: (verb) -> "The #{@getName()} #{verb}s"
     step: () -> 
+        # Chasing state machine:
+        if --@chasingTimeout <= 0
+            @chasingPlayer = false
+            @chasingTimeout  = 0
+        if @map.isSeen(@x, @y)
+            @chasingPlayer = true
+            # How long to chase without sight before giving up?
+            @chasingTimeout = 3
+        # Check if the player is close enough to be attacked:
         player = objNearby @, PlayerObj
         if player != null
             description = @getStats().useAttack(player.getStats())
-            console.log description
+            @map.events.push description
+        else if @chasingPlayer
+            # Otherwise move towards player IF chasing player
+            dir = objDirTowards @, @map.player
+            if dir != null
+                @move dir[0], dir[1]
 
     consoleRepr: () -> clc.redBright(@char)
     # Used at the start of a sentence

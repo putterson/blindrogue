@@ -136,7 +136,10 @@ stepWithAction = (action) ->
   player.action = null
   map.print()
   for m in messages
- 	 console.log m
+ 	  console.log m
+  for event in map.getAndResetEvents()
+    console.log event
+
 
 map.print()
 for m in view.describe()

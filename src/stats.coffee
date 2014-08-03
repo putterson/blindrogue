@@ -40,8 +40,9 @@ class window.Stats
 		if randInt(1,21) >= rollNeeded
 			# Success
 			text = randChoose(A.attackHitDescription) + " " + @wrapRegularVerb("deal") + " #{A.damage} damage!"
+			text = clc.red(text)
 		else
-			text = randChoose(A.attackMissDescription)
+			text = clc.blackBright(randChoose(A.attackMissDescription))
 		return text.replace("$ENEMY", E.getName()).replace("$NAME", @getName())
 
 # Create a initial stats from a stat data table (in data.coffee)
