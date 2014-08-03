@@ -124,20 +124,24 @@ stepWithAction = (action) ->
     # Report anything new for this step
     # TODO check for interruptions
     messages = view.step()
-    for m in messages
-      console.log m
   # Reset the player action (make sure we don't accidentally use it again)
   player.action = null
   map.print()
+  for m in messages
+ 	 console.log m
 
 map.print()
-console.log view.describe()
+for m in view.describe()
+	console.log m
 
 while true
   answer = readline.question('What is your action? ');
   action = parseAction answer
   # Did we encounter an error during parsing?
   if typeof action == 'string'
+  	if action == "describe"
+  		console.log view.describe().join("\n")
+  		continue
     console.log action
   else
     stepWithAction(action)

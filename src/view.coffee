@@ -9,7 +9,7 @@ class window.ViewState
 		@y = map.player.y
 
 		for [x, y] in @squares
-			obj = map.grid[x][y].object
+			obj = map.get(x,y).object
 			if obj != null
 				if obj instanceof MonsterObj
 					@mobs.push obj
@@ -58,7 +58,11 @@ class window.ViewDescriber
 		m = m.concat @compare(@curstate.items, @prestate.items, 'an item.')
 
 		if @prestate.room != @curstate.room
-			m.push 'You changed rooms'
+			if @curstate.room instanceof MapRoom
+				m.push 'You enter a room.'
+			else
+				m.push 'You enter a corridor.'
+
 
 		return m
 

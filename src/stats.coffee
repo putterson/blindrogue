@@ -4,7 +4,7 @@ class window.Equipment
 		@amulet = amulet
 	onCalculate: (stats) ->
 		@weapon.onCalculate(stats) unless @weapon == null
-		@amulet.onCalculate(stats) unless @weapon == null
+		@amulet.onCalculate(stats) unless @amulet == null
 
 class window.RawStats
 	constructor: (@hp, @maxHp, @mp, @maxMp, @attack) ->

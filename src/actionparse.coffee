@@ -63,15 +63,20 @@ parseDirection = (dir) ->
 
 MOVE_WORDS = ["g", "go", "m", "move"]
 STEP_WORDS = ["s", "step"]
+LOOK_WORDS = ["look", "describe"]
 
 window.parseAction = (line) ->
 	parts = line.split(" ")
 	verb = parts[0].toLowerCase()
 	isMove = (verb in MOVE_WORDS) 
 	isStep = (verb in STEP_WORDS)
+	isLook = (verb in LOOK_WORDS)
 	if isMove or isStep
 		dir = parseDirection(parts[1].toLowerCase())
 		if dir == null
 			return "Direction " + parts[1] + " could not be understood!"
 		return new MoveAction((if isStep then 1 else 3), dir[0], dir[1])
+	if isLook
+		return "describe"
+
 	return "Action could not be understood!"
