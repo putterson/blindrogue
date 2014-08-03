@@ -35,10 +35,7 @@ class window.ViewDescriber
 		# Messages in description
 		m = []
 
-		if @curstate.room != null
-			m.push 'You are in a room.'
-		else
-			m.push 'You are in a corridor.'
+		m = m.concat @describeroom(@curstate.room)
 
 		for item in @curstate.items
 			m.push 'You see an item.'
@@ -47,6 +44,58 @@ class window.ViewDescriber
 			m.push 'You see a monster.'
 
 		return m
+
+	# Describe the room/corridor you are in
+	# room: MapRoom or null for corridor
+	# step: false for normal describe, true if stepping
+	describeroom: (room, step) ->
+		m = []
+		verb = ""
+		size = ""
+		shape = ""
+		seendoors = []
+		
+
+		if step
+			verb = 'enter'
+		else
+			verb = 'are in'
+
+
+		if @curstate.room instanceof MapRoom
+			for d in room.doors
+				if @map.player.seen(d.x, d.y)
+					seendoors.push d
+			[w, h] = @curstate.room.size()
+			s = w * h
+
+			if s <= 3 * 3
+				size = "cramped"
+			else if s <= 4 * 4
+				size = "small"
+			else if s <= 5 * 5
+				size = "spacious"
+			else if s > 5 * 5
+				size = "cavernous"
+
+
+			if w >= 2 * h
+				shape = " flanking"
+			else if w >= 1.5 * h
+				shape = " broad"
+
+			if h >= 2 * w
+				shape = " pinched"
+			else if h >= 1.5 * w
+				shape = " narrow"
+
+			m.push "You #{verb} a #{size}#{shape} room."
+			m.push "You can see #{seendoors.length} doors."
+		else
+			m.push "You #{verb} a corridor"
+
+		return m
+
 
 	step: () ->
 		@prestate = @curstate
@@ -59,11 +108,7 @@ class window.ViewDescriber
 		m = m.concat @compare(@curstate.items, @prestate.items, (m) -> return m.itemType.appears)
 
 		if @prestate.room != @curstate.room
-			if @curstate.room instanceof MapRoom
-				[w, h] = @curstate.room.size()
-				m.push "You enter a room #{w} by #{h}."
-			else
-				m.push 'You enter a corridor.'
+			m = m.concat @describeroom(@curstate.room, true)
 
 		return m
 
