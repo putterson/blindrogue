@@ -57,7 +57,12 @@ class window.MonsterObj extends CombatObj
 
     getName: () -> @monsterType.name
     wrapRegularVerb: (verb) -> "The #{@getName()} #{verb}s"
-    step: () -> null
+    step: () -> 
+        player = objNearby @, PlayerObj
+        if player != null
+            description = @getStats().useAttack(player.getStats())
+            console.log description
+
     consoleRepr: () -> clc.redBright(@char)
     # Used at the start of a sentence
     getNameReference: () -> "The " + @getName()
