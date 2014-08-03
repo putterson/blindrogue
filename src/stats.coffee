@@ -9,7 +9,7 @@ class window.Equipment
 class window.RawStats
 	constructor: (@hp, @maxHp, @mp, @maxMp, @attack) ->
 		# Stores passed attributes
-	clone: new RawStats(@hp, @maxHp, @mp, @maxMp, @attack)
+	clone: () -> new RawStats(@hp, @maxHp, @mp, @maxMp, @attack)
 
 class window.Stats
 	constructor: (obj, hp, mp, attack) ->

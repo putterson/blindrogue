@@ -46,6 +46,7 @@ UNKNOWN_POTION_DESCRIPTORS = [
 
 Consumable {
 	name: "Potion of Health"
+	char: 'p'
 	# TODO: RNG
 	unidentifiedData: UNKNOWN_POTION_DESCRIPTORS[0]
 	type: "consumable"
@@ -61,6 +62,7 @@ Consumable {
 
 Weapon {
 	name: "Bō"
+	char: 'b'
 	traits: ["staff"]
 	description: "A very tall and long staff weapon."
 	appears: "You spot a long wooden $NAME!"
@@ -79,6 +81,7 @@ UNKNOWN_AMULET_DESCRIPTORS = [
 
 Amulet {
 	name: "Amulet of Staffing"
+	char: 'a'
 	# TODO: RNG
 	unidentifiedData: UNKNOWN_POTION_DESCRIPTORS[0]
 	description: "Grants +2 attack with a staff."

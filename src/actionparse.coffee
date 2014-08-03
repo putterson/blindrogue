@@ -66,12 +66,18 @@ STEP_WORDS = ["s", "step"]
 
 window.parseAction = (line) ->
 	parts = line.split(" ")
-	verb = parts[0].toLowerCase()
-	isMove = (verb in MOVE_WORDS) 
-	isStep = (verb in STEP_WORDS)
-	if isMove or isStep
-		dir = parseDirection(parts[1].toLowerCase())
-		if dir == null
-			return "Direction " + parts[1] + " could not be understood!"
-		return new MoveAction((if isStep then 1 else 3), dir[0], dir[1])
+	if parts.length >= 2
+		# Create the last verb by gluing together the last components
+		verb = parts[0].toLowerCase()
+		rest = ''
+		for i in [1 ..  parts.length-1]
+			rest += parts[i]
+
+		isMove = (verb in MOVE_WORDS) 
+		isStep = (verb in STEP_WORDS)
+		if isMove or isStep
+			dir = parseDirection(rest.toLowerCase())
+			if dir == null
+				return "Direction " + parts[1] + " could not be understood!"
+			return new MoveAction((if isStep then 1 else 3), dir[0], dir[1])
 	return "Action could not be understood!"
