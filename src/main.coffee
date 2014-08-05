@@ -57,7 +57,7 @@
 
 # Player::act = ->
 #   Game.engine.lock()
-#   # window.addEventListener "keydown", this
+#   # global.addEventListener "keydown", this
 
 # Player::handleEvent = (e) ->
 #   keyMap = {}
@@ -86,7 +86,7 @@
 #   @_x = newX
 #   @_y = newY
 #   @_draw()
-#   window.removeEventListener("keydown", this)
+#   global.removeEventListener("keydown", this)
 #   Game.engine.unlock()
 
 # Player::_draw = ->
@@ -95,8 +95,6 @@
 # Game.init()
 
 map = new Map(40,40)
-
-readline.question('What is your action? ');
 
 generateMap = () ->
   map.generate()

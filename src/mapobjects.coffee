@@ -1,4 +1,4 @@
-class window.BaseObj
+class global.BaseObj
     constructor: (map, char, x, y) ->
         @map = map
         # For debugging and replaying
@@ -19,13 +19,13 @@ class window.BaseObj
     step: () ->
         # Nothing by default
 
-class window.CombatObj extends BaseObj
+class global.CombatObj extends BaseObj
     solid: true
     constructor: (map, @rawStats, char, x, y) ->
         super(map, char, x,y)
     getStats: () -> new Stats(@, @rawStats)
 
-class window.PlayerObj extends CombatObj
+class global.PlayerObj extends CombatObj
     constructor: (map, char, x, y) ->
         super(map, makeStatsFromData(PLAYER_START_STATS), char, x,y)
         # Create the PreciseShadowcasting
@@ -55,7 +55,7 @@ class window.PlayerObj extends CombatObj
                 p.map.get(x,y).wasSeen = true
                 p.seenSqrs.push [x,y]
 
-class window.MonsterObj extends CombatObj
+class global.MonsterObj extends CombatObj
     constructor: (map, @monsterType, x, y) ->
         super(map, makeStatsFromData(@monsterType), @monsterType.char, x,y)
         @chasingPlayer = false
@@ -88,7 +88,7 @@ class window.MonsterObj extends CombatObj
     # Used at the start of a sentence
     getNameReference: () -> "The " + @getName()
 
-class window.ItemObj extends BaseObj
+class global.ItemObj extends BaseObj
     constructor: (map, @itemType, x, y) ->
         super(map, @itemType.char, x,y)
 

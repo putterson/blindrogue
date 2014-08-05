@@ -1,4 +1,4 @@
-class window.Equipment
+class global.Equipment
 	constructor: () ->
 		@weapon = null
 		@amulet = null
@@ -7,20 +7,20 @@ class window.Equipment
 		@weapon.onCalculate(stats) unless @weapon == null
 		@amulet.onCalculate(stats) unless @amulet == null
 
-class window.Attack
+class global.Attack
 	constructor: (@damage, @hitChance, @attackHitDescription, @attackMissDescription) ->
 		# Set above
 	clone: () -> new Attack(@damage, @hitChance, @attackHitDescription, @attackMissDescription)
 
-class window.RawStats
+class global.RawStats
 	constructor: (@hp, @maxHp, @mp, @maxMp, @armourClass, @attack) ->
 		# Stores passed attributes
 	clone: () -> new RawStats(@hp, @maxHp, @mp, @maxMp, @armourClass, (if @attack then @attack.clone() else null))
 
-window.makeAttack = (attack) -> new Attack(attack.damage, attack.hitChance, attack.attackHitDescription, attack.attackMissDescription)
-window.makeStats = (hp, mp, armourClass, attack) -> new RawStats(hp,hp, mp,mp, armourClass, makeAttack(attack))
+global.makeAttack = (attack) -> new Attack(attack.damage, attack.hitChance, attack.attackHitDescription, attack.attackMissDescription)
+global.makeStats = (hp, mp, armourClass, attack) -> new RawStats(hp,hp, mp,mp, armourClass, makeAttack(attack))
 
-class window.Stats
+class global.Stats
 	constructor: (obj, stats) ->
 		@obj = obj
 		@base = stats 
@@ -46,7 +46,7 @@ class window.Stats
 		return text.replace("$ENEMY", E.getName()).replace("$NAME", @getName())
 
 # Create a initial stats from a stat data table (in data.coffee)
-window.makeStatsFromData = (D) ->
+global.makeStatsFromData = (D) ->
     A = D.attack
     attack = new Attack(A.damage, A.hitChance, A.attackHitDescription, A.attackMissDescription)
     return makeStats(D.hp, D.mp, D.armourClass, attack)

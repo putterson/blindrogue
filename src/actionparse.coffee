@@ -1,31 +1,13 @@
-class window.MoveAction
+class global.BaseAction
+	
+	
+
+class global.AttackAction
 	constructor: (nSteps, dx, dy) ->
 		@nSteps = nSteps
 		@hasPerformed = false
 		@dx = dx
 		@dy = dy
-
-	# Returns null if no good direction could be found
-	_findDirection: (player) ->
-		free = (dx, dy) -> not player.map.isBlocked(player.x + dx, player.y + dy)
-		if free(@dx, @dy) 
-			return [@dx, @dy]
-		if @dx == 0
-			if free(-1, @dy) 
-				return [-1, @dy]
-			if free(1, @dy)
-				return [1, @dy]
-		else if @dy == 0
-			if free(@dx, 1)  
-				return [@dx,  1]
-			if free(@dx, -1) 
-				return [@dx, -1]
-		else 
-			if free(@dx, 0)  
-				return [@dx,  0]
-			if free(0, @dy) 
-				return [0, @dy]
-		return null
 
 	canPerform: (player) ->
 		if @hasPerformed and player.map.objectTypeSeen(MonsterObj)
@@ -34,7 +16,7 @@ class window.MoveAction
 		if @nSteps <= 0 
 			# Need new action
 			return false
-		if not @_findDirection(player)
+		if not objFindFreeDirection(player, @dx, @dy)
 			return false
 		return true
 
@@ -43,7 +25,33 @@ class window.MoveAction
 		assert @canPerform(player)
 		@nSteps--
 		@hasPerformed = true
-		[dx, dy] = @_findDirection(player)
+		[dx, dy] = objFindFreeDirection(player, @dx, @dy)
+		player.move(dx, dy)
+
+class global.MoveAction
+	constructor: (nSteps, dx, dy) ->
+		@nSteps = nSteps
+		@hasPerformed = false
+		@dx = dx
+		@dy = dy
+
+	canPerform: (player) ->
+		if @hasPerformed and player.map.objectTypeSeen(MonsterObj)
+			# Only one step allowed when monsters nearby
+			return false
+		if @nSteps <= 0 
+			# Need new action
+			return false
+		if not objFindFreeDirection(player, @dx, @dy)
+			return false
+		return true
+
+	perform: (player) ->
+		# Assumes canPerform!
+		assert @canPerform(player)
+		@nSteps--
+		@hasPerformed = true
+		[dx, dy] = objFindFreeDirection(player, @dx, @dy)
 		player.move(dx, dy)
 
 # Returns a string without a component, if the string starts with a component
@@ -80,14 +88,21 @@ createMoveIfPossible = (map, steps, [dx, dy]) ->
 	# Otherwise, return error message
 	return describeBlockingSquare(map, map.player.x + dx, map.player.y + dy)
 
-parseTarget = (restLine) ->
+parseTarget = (map, restLine) ->
+	objs = map.seenObjects(MonsterObj)
+	if objs.length == 0
+		return "There is nothing to attack nearby!"
+	if restLine == ""
+		# Return closest enemy
+		return objs[0]
+	
 
 MOVE_WORDS = ["move", "go", "g", "m"]
 ATTACK_WORDS = ["attack", "fight", "a", "f"]
-STEP_WORDS = ["step"]
+STEP_WORDS = ["step", "s"]
 LOOK_WORDS = ["look", "describe", "l", "d"]
 
-window.parseAction = (map, line) ->
+global.parseAction = (map, line) ->
 	# Remove withspace, and lower-case the string
 	line = line.replace(new RegExp(' ', 'g'),'').toLowerCase(); 
 
@@ -106,7 +121,7 @@ window.parseAction = (map, line) ->
 			return "Direction " + restLine + " could not be understood!"
 		return createMoveIfPossible map, 1, dir
 	else if (restLine = tryParse(line, ATTACK_WORDS))
-		target = parseTarget restLine
+		target = parseTarget(map, restLine)
 		if typeof target == 'string'
 		 	return target
 	else if line in LOOK_WORDS

@@ -1,4 +1,4 @@
-class window.MapRoom
+class global.MapRoom
     within: (x,y) ->
         if x < @x1 or x > @x2
             return false
@@ -18,12 +18,12 @@ class window.MapRoom
         (@y2 - @y1 + 1)
     ]
 
-class window.MapDoor
+class global.MapDoor
     constructor: (x, y) ->
         @x = x
         @y = y
 
-class window.MapSquare
+class global.MapSquare
     constructor: (char = '#', solid = true, wasSeen = false) ->
         @char = char
         @solid = solid
@@ -33,7 +33,7 @@ class window.MapSquare
     addObject: (obj) -> @objects.push obj
     removeObject: (obj) -> elemRemove @objects, obj
 
-class window.Map
+class global.Map
     # Create a map that is filled with nothing
     constructor: (w, h) ->
         @w = w
