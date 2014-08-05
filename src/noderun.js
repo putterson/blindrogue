@@ -17,5 +17,8 @@ require('./mapobjects.coffee')
 require('./actionparse.coffee')
 require('./view.coffee')
 require('./actionverbs.coffee')
-require('./test_actionverbs.coffee')
-require('./main.coffee')
+if (process.env.TEST) {
+	require('./test_actionverbs.coffee')
+} else {
+	require('./main.coffee')
+}

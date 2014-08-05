@@ -13,29 +13,15 @@ class global.ActionChoice
 	# Number of words needed effects autocomplete suggestion.
 	# Eg 'fight Keugeken north 1' if only 1 monster total can be 'fight Keugeken north'
 	constructor: (words, @describeFunc = defaultDescribe) ->
+		@rawWords = words
 		@words = []
 		for word in words
 			# For purposes of matching:
 			@words.push word.toLowerCase()
 		@minimalWords = null # Set by setMinimalActionWords
-	describe: () -> @describeFunc @words, @minimalWords
+	describe: () -> 
+		return @describeFunc @rawWords, @minimalWords
 
-# Set '@minimalWords' in all ActionChoice objects given.
-# O(N^2) algorithm.
-global.setMinimalActionWords = (choices) ->
-	for choice in choices
-		minWords = 1
-		cWords = choice.words
-		# Loop through other choices to find longest streak of matching words
-		for otherChoice in choices
-			oWords = otherChoice.words
-			len = Math.min(oWords.length, cWords.length)
-			for i in [0..len-1]
-				if cWords[i] != oWords[i]
-					break
-				# Keep track of the longest matching-word streak
-				minWords = Math.max(i+1, minWords)
-		choice.minimalWords = minWords
 
 # Return matched word, and rest of string.
 # 'null' is returned if nothing matches
@@ -66,15 +52,40 @@ filterChoices = (word, wordNumber, choices) ->
 			newChoices.push choice
 	return newChoices
 
-# Return all the possible matches for a string.
-# Words are parsed greedily, consuming as many characters as possible.
-global.possibleMatches = (string, choices) ->
-	wordNumber = 0
-	while string != ""
-		[matchedWord, matchedChars] = greedyMatch(string, wordNumber, choices)
-		if matchedWord == null
-			# No possibilities!
-			return []
-		choices = filterChoices(matchedWord, wordNumber, choices)
-		wordNumber++
-	return choices
+class global.ActionChoiceSet
+	constructor: (@choices) -> @_setMinimalActionWords()
+
+	# Set '@minimalWords' in all ActionChoice objects given.
+	# O(N^2) algorithm.
+	_setMinimalActionWords: () ->
+		for choice in @choices
+			minWords = 1
+			cWords = choice.words
+			# Loop through other choices to find longest streak of matching words
+			for otherChoice in @choices
+				if choice == otherChoice then continue
+				oWords = otherChoice.words
+				len = Math.min(oWords.length, cWords.length)
+				for i in [0..len-1]
+					if cWords[i] != oWords[i]
+						break
+					# Keep track of the longest matching-word streak
+					# Set to one-past the ambiguous word matching
+					minWords = Math.max(i+2, minWords)
+					console.log(choice.words, otherChoice.words, minWords)
+					assert cWords.length >= minWords
+			choice.minimalWords = minWords
+
+	# Return all the possible matches for a string.
+	# Words are parsed greedily, consuming as many characters as possible.
+	possibleMatches: (string) ->
+		wordNumber = 0
+		choices = @choices
+		while string != ""
+			[matchedWord, matchedChars] = greedyMatch(string, wordNumber, choices)
+			if matchedWord == null
+				# No possibilities!
+				return []
+			choices = filterChoices(matchedWord, wordNumber, choices)
+			wordNumber++
+		return choices
