@@ -25,7 +25,7 @@ class global.ActionChoice
 
 # Return matched word, and rest of string.
 # 'null' is returned if nothing matches
-greedyMatch = (string, wordNumber, choices) ->
+window.actionGreedyMatch = (string, wordNumber, choices) ->
 	matchedChars = 0
 	matchedWord = null
 	# Loop over all possible choices
@@ -72,20 +72,23 @@ class global.ActionChoiceSet
 					# Keep track of the longest matching-word streak
 					# Set to one-past the ambiguous word matching
 					minWords = Math.max(i+2, minWords)
-					console.log(choice.words, otherChoice.words, minWords)
-					assert cWords.length >= minWords
+					assert cWords.length >= minWords, "Two actions (most likely) have the exact same activation text!"
 			choice.minimalWords = minWords
 
 	# Return all the possible matches for a string.
 	# Words are parsed greedily, consuming as many characters as possible.
+	# Returns the possible choices, along with the 'remaining component' of the string
 	possibleMatches: (string) ->
 		wordNumber = 0
 		choices = @choices
 		while string != ""
-			[matchedWord, matchedChars] = greedyMatch(string, wordNumber, choices)
+			[matchedWord, newString] = actionGreedyMatch(string, wordNumber, choices)
+			string = newString # Update string
 			if matchedWord == null
-				# No possibilities!
-				return []
+				# No further parsing possible!
+				# Return what we have now
+				return [choices, string]
 			choices = filterChoices(matchedWord, wordNumber, choices)
 			wordNumber++
-		return choices
+		# Parsing-completed path. Returns multiple if string is so far ambiguous. 
+		return [choices, string]
