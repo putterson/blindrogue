@@ -1,4 +1,4 @@
-class window.ViewState
+class global.ViewState
 	constructor: (map) ->
 		@items = []
 		@mobs = []
@@ -22,7 +22,7 @@ class window.ViewState
 				@room = room
 				break
 
-class window.ViewDescriber
+class global.ViewDescriber
 	constructor: (map) ->
 		@map = map
 		@curstate = new ViewState(@map)

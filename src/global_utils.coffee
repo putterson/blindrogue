@@ -1,21 +1,26 @@
 # Global utilties for convenience
 
-window.randInt = (min, max) -> 
+global.randInt = (min, max) -> 
 	r = max - min
 	return Math.floor(ROT.RNG.getUniform() * r) + min
 
-window.randChance = (chance) -> 
+global.randChance = (chance) -> 
 	return (ROT.RNG.getUniform() < chance)
 
-window.randChoose = (choices) -> 
+global.randChoose = (choices) -> 
 	choice = randInt(0, choices.length)
 	return choices[choice]
 
-window.assert = (condition, message = "Assertion failed") ->
+global.assert = (condition, message = "Assertion failed") ->
     if not condition
-        throw message
+        throw new Error(message)
 
-window.elemRemove = (array, elem) ->
+global.elemRemove = (array, elem) ->
 	index = array.indexOf(elem)
 	if index > -1
     	array.splice(index, 1)
+
+# Just in case we're IE < 9 for some reason:
+if not String.prototype.trim
+	String.prototype.trim = () -> 
+		return @replace /^\s+|\s+$/g, ""

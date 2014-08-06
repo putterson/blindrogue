@@ -1,36 +1,22 @@
-class window.MoveAction
+class global.BaseAction
+	
+	
+
+class global.AttackAction
 	constructor: (nSteps, dx, dy) ->
 		@nSteps = nSteps
+		@hasPerformed = false
 		@dx = dx
 		@dy = dy
 
-	# Returns null if no good direction could be found
-	_findDirection: (player) ->
-		free = (dx, dy) -> not player.map.isBlocked(player.x + dx, player.y + dy)
-		if free(@dx, @dy) 
-			return [@dx, @dy]
-		if @dx == 0
-			if free(-1, @dy) 
-				return [-1, @dy]
-			if free(1, @dy)
-				return [1, @dy]
-		else if @dy == 0
-			if free(@dx, 1)  
-				return [@dx,  1]
-			if free(@dx, -1) 
-				return [@dx, -1]
-		else 
-			if free(@dx, 0)  
-				return [@dx,  0]
-			if free(0, @dy) 
-				return [0, @dy]
-		return null
-
 	canPerform: (player) ->
+		if @hasPerformed and player.map.objectTypeSeen(MonsterObj)
+			# Only one step allowed when monsters nearby
+			return false
 		if @nSteps <= 0 
 			# Need new action
 			return false
-		if not @_findDirection(player)
+		if not objFindFreeDirection(player, @dx, @dy)
 			return false
 		return true
 
@@ -38,8 +24,42 @@ class window.MoveAction
 		# Assumes canPerform!
 		assert @canPerform(player)
 		@nSteps--
-		[dx, dy] = @_findDirection(player)
+		@hasPerformed = true
+		[dx, dy] = objFindFreeDirection(player, @dx, @dy)
 		player.move(dx, dy)
+
+class global.MoveAction
+	constructor: (nSteps, dx, dy) ->
+		@nSteps = nSteps
+		@hasPerformed = false
+		@dx = dx
+		@dy = dy
+
+	canPerform: (player) ->
+		if @hasPerformed and player.map.objectTypeSeen(MonsterObj)
+			# Only one step allowed when monsters nearby
+			return false
+		if @nSteps <= 0 
+			# Need new action
+			return false
+		if not objFindFreeDirection(player, @dx, @dy)
+			return false
+		return true
+
+	perform: (player) ->
+		# Assumes canPerform!
+		assert @canPerform(player)
+		@nSteps--
+		@hasPerformed = true
+		[dx, dy] = objFindFreeDirection(player, @dx, @dy)
+		player.move(dx, dy)
+
+# Returns a string without a component, if the string starts with a component
+tryParse = (text, words) ->
+	for word in words
+		if text.indexOf(word) == 0 # Starts with it
+			return text.substring(word.length)
+	return null
 
 parseDirection = (dir) ->
 	if dir in ["n", "north", "up", "u"]
@@ -51,39 +71,59 @@ parseDirection = (dir) ->
 	if dir in ["w", "west", "left", "l"]
 		return [-1,0]
 
-	if dir in ["ne", "northeast", "upright", "ur"]
+	if dir in ["ne", "en", "northeast", "upright", "rightdown", "ur", "ru"]
 		return [1,-1]
-	if dir in ["nw", "northwest", "upleft", "ul"]
+	if dir in ["nw", "wn", "northwest", "upleft", "leftup", "ul", "lu"]
 		return [-1,-1]
-	if dir in ["se", "southeast", "downright", "dr"]
+	if dir in ["se", "es", "southeast", "downright", "rightdown", "dr", "rd"]
 		return [1,1]
-	if dir in ["sw", "southwest", "downleft", "dl"]
+	if dir in ["sw", "ws", "southwest", "downleft", "leftdown", "dl", "ld"]
 		return [-1,1]
 	return null
 
-MOVE_WORDS = ["g", "go", "m", "move"]
-STEP_WORDS = ["s", "step"]
-LOOK_WORDS = ["look", "describe"]
+createMoveIfPossible = (map, steps, [dx, dy]) ->
+	action = new MoveAction(steps, dx, dy)
+	if action.canPerform(map.player)
+		return action
+	# Otherwise, return error message
+	return describeBlockingSquare(map, map.player.x + dx, map.player.y + dy)
 
-window.parseAction = (line) ->
-	parts = line.split(" ")
-	verb = parts[0].toLowerCase()
-	if parts.length >= 2
-		# Create the last verb by gluing together the last components
-		rest = ''
-		for i in [1 ..  parts.length-1]
-			rest += parts[i]
+parseTarget = (map, restLine) ->
+	objs = map.seenObjects(MonsterObj)
+	if objs.length == 0
+		return "There is nothing to attack nearby!"
+	if restLine == ""
+		# Return closest enemy
+		return objs[0]
+	
 
-		isMove = (verb in MOVE_WORDS) 
-		isStep = (verb in STEP_WORDS)
-		
-		if isMove or isStep
-			dir = parseDirection(rest.toLowerCase())
-			if dir == null
-				return "Direction " + parts[1] + " could not be understood!"
-			return new MoveAction((if isStep then 1 else 3), dir[0], dir[1])
-	else if parts.length == 1
-		isLook = (verb in LOOK_WORDS)
-		if isLook
-			return "describe"
+MOVE_WORDS = ["move", "go", "g", "m"]
+ATTACK_WORDS = ["attack", "fight", "a", "f"]
+STEP_WORDS = ["step", "s"]
+LOOK_WORDS = ["look", "describe", "l", "d"]
+
+global.parseAction = (map, line) ->
+	# Remove withspace, and lower-case the string
+	line = line.replace(new RegExp(' ', 'g'),'').toLowerCase(); 
+
+	# Try to parse the start of various actions.
+	# Assignment intentional in if-statements.
+	if (restLine = tryParse(line, MOVE_WORDS))
+		# Try a short range travel
+		dir = parseDirection(restLine)
+		if dir == null
+			return "Direction " +restLine+ " could not be understood!"
+		return createMoveIfPossible map, 3, dir
+	else if (restLine = tryParse(line, STEP_WORDS))
+		# Try a step
+		dir = parseDirection(restLine)
+		if dir == null
+			return "Direction " + restLine + " could not be understood!"
+		return createMoveIfPossible map, 1, dir
+	else if (restLine = tryParse(line, ATTACK_WORDS))
+		target = parseTarget(map, restLine)
+		if typeof target == 'string'
+		 	return target
+	else if line in LOOK_WORDS
+		return "describe"
 	return "Action could not be understood!"

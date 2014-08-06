@@ -1,5 +1,5 @@
-window.MONSTERS = {}
-window.ITEMS = {}
+global.MONSTERS = {}
+global.ITEMS = {}
 
 # Helper for monster data
 Monster = (data) ->
@@ -26,7 +26,7 @@ Amulet = (data) ->
 # Define player starting stats
 ###########################################
 
-window.PLAYER_START_STATS = {
+global.PLAYER_START_STATS = {
 	hp: 10
 	mp: 0
 	# 'Base' armour class -- does not account for starting equipment
