@@ -12,10 +12,9 @@ class global.ActionChoice
 	# Principle: Do not need all words, only up to ambiguity
 	# Number of words needed effects autocomplete suggestion.
 	# Eg 'fight Keugeken north 1' if only 1 monster total can be 'fight Keugeken north'
-	constructor: (words, @describeFunc = defaultDescribe) ->
-		@rawWords = words
+	constructor: (@rawWords, @action, @describeFunc = defaultDescribe) ->
 		@words = []
-		for word in words
+		for word in @rawWords
 			# For purposes of matching:
 			@words.push word.toLowerCase()
 		@minimalWords = null # Set by setMinimalActionWords
@@ -52,8 +51,20 @@ filterChoices = (word, wordNumber, choices) ->
 			newChoices.push choice
 	return newChoices
 
+# Filter choices that have more words than the least amount of words.
+filterNonMinimalChoices = (choices) ->
+	leastN = 999 # Arbitrarily large 
+	for {words} in choices
+		leastN = Math.min words.length, leastN
+	newChoices = []
+	for choice in choices
+		if choice.words.length <= leastN
+			newChoices.push choice
+	return newChoices
+
 class global.ActionChoiceSet
-	constructor: (@choices) -> @_setMinimalActionWords()
+	constructor: (@choices) -> 
+		@_setMinimalActionWords()
 
 	# Set '@minimalWords' in all ActionChoice objects given.
 	# O(N^2) algorithm.
@@ -71,14 +82,16 @@ class global.ActionChoiceSet
 						break
 					# Keep track of the longest matching-word streak
 					# Set to one-past the ambiguous word matching
-					minWords = Math.max(i+2, minWords)
-					assert cWords.length >= minWords, "Two actions (most likely) have the exact same activation text!"
+					minWords = Math.min Math.max(i+2, minWords), cWords.length
 			choice.minimalWords = minWords
 
 	# Return all the possible matches for a string.
 	# Words are parsed greedily, consuming as many characters as possible.
-	# Returns the possible choices, along with the 'remaining component' of the string
+	# Returns the possible choices, along with whether the parsing matched completely.
 	possibleMatches: (string) ->
+		# Remove withspace, and lower-case the string
+		string = string.replace(new RegExp(' ', 'g'),'').toLowerCase(); 
+
 		wordNumber = 0
 		choices = @choices
 		while string != ""
@@ -86,9 +99,10 @@ class global.ActionChoiceSet
 			string = newString # Update string
 			if matchedWord == null
 				# No further parsing possible!
-				# Return what we have now
-				return [choices, string]
+				# Parsing incomplete, but return what we have now (may still be useful suggestions).
+				return [choices, false]
 			choices = filterChoices(matchedWord, wordNumber, choices)
 			wordNumber++
+		choices = filterNonMinimalChoices(choices)
 		# Parsing-completed path. Returns multiple if string is so far ambiguous. 
-		return [choices, string]
+		return [choices, true]
