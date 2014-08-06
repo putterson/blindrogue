@@ -31,7 +31,7 @@ class global.PlayerObj extends CombatObj
         # Create the PreciseShadowcasting
         @fov = new ROT.FOV.PreciseShadowcasting (x, y) ->
             return not map.isSolid(x,y)
-        @visionSqrs = 7
+        @visionSqrs = 4
         @seenSqrs = []
         @action = null
 

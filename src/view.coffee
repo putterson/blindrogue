@@ -104,27 +104,33 @@ class global.ViewDescriber
 
 			walldoorstring = ""
 			if seendoors != "no"
-				for k, v of @walldoors(room)
-					walldoorstring += ""
+				for k, v of @walldoors(room, @curstate.squares)
+					if v > 0
+						if v > 1
+							walldoorstring += "#{v} doors to the #{k}. "
+						else
+							walldoorstring += "#{v} door to the #{k}. "
+			m.push walldoorstring
 				
 		else
 			m.push "You #{verb} a corridor"
 
 		return m
 
-	walldoors: (room, dir) ->
-		walls = {"N" : 0, "E" : 0, "S" : 0, "W" : 0}
+	walldoors: (room, seenmask) ->
+		walls = {"North" : 0, "South" : 0, "East" : 0, "West" : 0}
 
-		#North wall
 		for d in room.doors
-			if d.x == room.x1
-				walls["N"]++
-			else if d.x == room.x2
-				walls["S"]++
-			else if d.y == room.y1
-				walls["W"]++
-			else if d.y == room.y2
-				walls["E"]++
+			if not @map.wasSeen d.x, d.y
+				continue
+			if d.y == room.y1 - 1
+				walls["North"]++
+			else if d.y == room.y2 + 1
+				walls["South"]++
+			else if d.x == room.x1 - 1
+				walls["West"]++
+			else if d.x == room.x2 + 1
+				walls["East"]++
 
 		return walls
 
