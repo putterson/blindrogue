@@ -53,7 +53,9 @@ class window.ViewDescriber
 		verb = ""
 		size = ""
 		shape = ""
-		seendoors = []
+		plural = ""
+		seendoors = ""
+		doors = []
 		
 
 		if step
@@ -65,7 +67,13 @@ class window.ViewDescriber
 		if @curstate.room instanceof MapRoom
 			for d in room.doors
 				if @map.player.seen(d.x, d.y)
-					seendoors.push d
+					doors.push d
+
+			if doors.length == 0
+				seendoors = "no"
+			else
+				seendoors = doors.length
+
 			[w, h] = @curstate.room.size()
 			s = w * h
 
@@ -89,12 +97,36 @@ class window.ViewDescriber
 			else if h >= 1.5 * w
 				shape = " narrow"
 
-			m.push "You #{verb} a #{size}#{shape} room."
-			m.push "You can see #{seendoors.length} doors."
+			if seendoors > 1 or seendoors == "no"
+				plural = "s"
+
+			m.push "You #{verb} a #{size}#{shape} room with #{seendoors} door#{plural} in view."
+
+			walldoorstring = ""
+			if seendoors != "no"
+				for k, v of @walldoors(room)
+					walldoorstring += ""
+				
 		else
 			m.push "You #{verb} a corridor"
 
 		return m
+
+	walldoors: (room, dir) ->
+		walls = {"N" : 0, "E" : 0, "S" : 0, "W" : 0}
+
+		#North wall
+		for d in room.doors
+			if d.x == room.x1
+				walls["N"]++
+			else if d.x == room.x2
+				walls["S"]++
+			else if d.y == room.y1
+				walls["W"]++
+			else if d.y == room.y2
+				walls["E"]++
+
+		return walls
 
 
 	step: () ->
