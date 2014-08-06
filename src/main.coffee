@@ -161,6 +161,8 @@ while true
   if typeof action == 'string'
     if action == "describe"
       console.report view.describe().join("\n")
+    else if action == "reveal"
+      map.print()
     else
       console.report action
   else

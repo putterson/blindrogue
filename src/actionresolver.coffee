@@ -98,6 +98,7 @@ addMoveActions = (choices, firstWords, nSteps) ->
 addDescribeActions = (choices) ->
 	for firstWord in LOOK_WORDS
 		choices.push new ActionChoice([firstWord], "describe")
+	choices.push new ActionChoice(["reveal"], "reveal")
 
 createActionChoiceSet = (map) ->
 	choices = []
