@@ -39,6 +39,8 @@ class global.PlayerObj extends CombatObj
     # Used at the start of a sentence
     wrapRegularVerb: (verb) -> "You #{verb}"
     step: () ->
+        assert (not @action.isComplete(@)[0]), "Already completed the action we have queued for this step!"
+        assert @action.canPerform(@)[0], "Cannot perform the action we have queued for this step!"
         @action.perform(@)
         @computeFov()
 
@@ -47,6 +49,9 @@ class global.PlayerObj extends CombatObj
             if sx == x and sy == y
                 return true
         return false
+    attack: (obj) ->
+        description = @getStats().useAttack(obj.getStats())
+        @map.events.push {type: "EnemyWasAttacked", message: description}
     computeFov: () ->
         @seenSqrs = []
         p = this
@@ -61,6 +66,7 @@ class global.MonsterObj extends CombatObj
         @chasingPlayer = false
         # How long to chase without sight before giving up?
         @chasingTimeout = 0
+        @isDead = false
 
     getName: () -> @monsterType.name
     wrapRegularVerb: (verb) -> "The #{@getName()} #{verb}s"
@@ -77,7 +83,7 @@ class global.MonsterObj extends CombatObj
         player = objNearby @, PlayerObj
         if player != null
             description = @getStats().useAttack(player.getStats())
-            @map.events.push description
+            @map.events.push {type: "PlayerWasAttacked", message: description}
         else if @chasingPlayer
             # Otherwise move towards player IF chasing player
             dir = objDirTowards @, @map.player
@@ -91,5 +97,9 @@ class global.MonsterObj extends CombatObj
 class global.ItemObj extends BaseObj
     constructor: (map, @itemType, x, y) ->
         super(map, @itemType.char, x,y)
-
+        @wasSeen = false
+    step: () -> 
+        if not @wasSeen and @map.isSeen @x, @y
+            @wasSeen = true
+    getName: () -> @itemType.name
     consoleRepr: () -> clc.blueBright(@char)

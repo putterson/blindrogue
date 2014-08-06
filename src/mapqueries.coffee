@@ -19,6 +19,8 @@ global.objOrthoSquaresNear = (obj) -> [
 global.objSquaresNear = (obj) -> 
 	objDiagSquaresNear(obj).concat(objOrthoSquaresNear(obj))
 
+global.objApproxDirection = (obj1, obj2) -> approxDirection obj2.x-obj1.x, obj2.y-obj2.y
+
 global.objNearby = (obj, type) ->
 	for [x,y] in objSquaresNear(obj)
 		for other in obj.map.getObjects(x, y)
@@ -51,7 +53,7 @@ global.objDirTowards = (obj1, obj2, usePlayerSight = false) ->
 		else if map.wasSeen(x,y)
 			return not map.isSolid(x,y)
 		else 
-			return false
+			return true # Assume not solid, to encourage exploration
 	astar = new ROT.Path.AStar(obj2.x, obj2.y, if usePlayerSight then playerPassable else passable)
 	pathSquares = []
 	astar.compute(obj1.x, obj1.y, (x, y) -> pathSquares.push [x,y])

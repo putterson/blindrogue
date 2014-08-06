@@ -125,31 +125,41 @@ stepWithAction = (action) ->
   player = map.player
   # Copy over the player action, for the step event
   player.action = action
-  while action.canPerform(player) 
+  while true
+    [canPerform, reasonIfCant] = action.canPerform(player)
+    if not canPerform
+      messages.push clc.red(reasonIfCant)
+      break
     map.step()
+    # Important: Check interruption status BEFORE clearing events!
+    [isInterrupted, reasonIfInterrupted] = action.isInterrupted(player)
+    for event in map.getAndResetEvents()
+      messages.push(event.message)
     # Report anything new for this step
-    # TODO check for interruptions
     messages = messages.concat view.step()
+    if action.isComplete(player)
+      break
+    if isInterrupted
+      messages.push clc.blackBright(reasonIfInterrupted)
+      break
   # Reset the player action (make sure we don't accidentally use it again)
   player.action = null
   map.print()
   for m in messages
-      console.log m
-  for event in map.getAndResetEvents()
-    console.log event
+      console.report m
 
 map.print()
 for m in view.describe()
-    console.log m
+    console.report m
 
 while true
   answer = readline.question('What is your action? ');
-  action = parseAction(map, answer)
+  action = resolveAction(map, answer)
   # Did we encounter an error during parsing?
   if typeof action == 'string'
     if action == "describe"
-      console.log view.describe().join("\n")
+      console.report view.describe().join("\n")
     else
-      console.log action
+      console.report action
   else
     stepWithAction(action)

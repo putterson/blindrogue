@@ -8,17 +8,18 @@ global.readline = require('readline-sync')
 global.clc = require('cli-color')
 
 require('./global_utils.coffee')
+require('./console.coffee')
 require('./data.coffee')
 require('./describe.coffee')
 require('./mapqueries.coffee')
 require('./stats.coffee')
 require('./map.coffee')
 require('./mapobjects.coffee')
-require('./actionparse.coffee')
 require('./view.coffee')
-require('./actionverbs.coffee')
+require('./actionparser.coffee')
+require('./actionresolver.coffee')
 if (process.env.TEST) {
-	require('./test_actionverbs.coffee')
+	require('./test_actionparser.coffee')
 } else {
 	require('./main.coffee')
 }

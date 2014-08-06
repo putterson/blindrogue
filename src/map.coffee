@@ -45,6 +45,12 @@ class global.Map
         @frame = 1
         @events = []
 
+    # Did an event occur last step?
+    eventOccurred: (checkType) ->
+        for {type} in @events
+            if type == checkType then return true
+        return false
+
     getAndResetEvents: () ->
         oldEvents = @events
         @events = []
@@ -67,7 +73,7 @@ class global.Map
 
     # Seen objects of a certain type, sorted by proximity to player
     seenObjects: (type) ->
-        {x: px, y: py} = map.player
+        {x: px, y: py} = @player
         seen = []
         for obj in @objects
             if obj instanceof type
@@ -154,14 +160,14 @@ class global.Map
                 map.grid[y][x].char = 'E'
             @rooms.push room
 
-    # Note: console.log is node-js only!
+    # Note: console.report is node-js only!
     print: () ->
-        console.log "FRAME #{@frame}"
+        console.report "FRAME #{@frame}"
         y = 0
         sep = ''
         for _ in [0..@w + 1]
             sep += '-'
-        console.log sep
+        console.report sep
         for row in @grid
             row_str = '|'
             x = 0
@@ -181,7 +187,7 @@ class global.Map
                         char = clc.blackBright(char)
                 row_str += char
                 x += 1
-            console.log row_str + '|'
+            console.report row_str + '|'
             y += 1
-        console.log sep
+        console.report sep
 

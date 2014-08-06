@@ -24,3 +24,30 @@ global.elemRemove = (array, elem) ->
 if not String.prototype.trim
 	String.prototype.trim = () -> 
 		return @replace /^\s+|\s+$/g, ""
+
+# For approxDirection
+_closeToDegree = (d1, d2) ->
+	diff = d1 - d2
+	if Math.abs(diff % 360) <= 22.5 or 360 - Math.abs(diff % 360) <= 22.5
+		return true
+	return false
+
+global.approxDirection = (dx, dy) ->
+	degree = Math.atan2(dx, dy)
+	if _closeToDegree degree, 0
+		return [0,1]
+	if _closeToDegree degree, 45
+		return [1,1]
+	if _closeToDegree degree, 90
+		return [1,0]
+	if _closeToDegree degree, 135
+		return [1,-1]
+	if _closeToDegree degree, 180
+		return [0,-1]
+	if _closeToDegree degree, -45
+		return [-1,1]
+	if _closeToDegree degree, -90
+		return [-1,0]
+	if _closeToDegree degree, -135
+		return [-1,-1]
+	return [0,0]
