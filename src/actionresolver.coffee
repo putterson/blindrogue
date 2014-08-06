@@ -74,7 +74,7 @@ dirToWordCombos = (dx, dy) ->
 	# Rightward
 	if dx == +1 and dy == -1 then return ["north east", "up right",   "right up"  ]
 	if dx == +1 and dy == 0  then return ["east",		"right"                   ]
-	if dx == +1 and dy == +1 then return ["south east", "down right", "left right"]
+	if dx == +1 and dy == +1 then return ["south east", "down right", "right down"]
 	# Leftward
 	if dx == -1 and dy == -1 then return ["north west", "up left",    "left up"   ]
 	if dx == -1 and dy == 0  then return ["west", 		"left"                    ]
@@ -97,8 +97,8 @@ addMoveActions = (choices, firstWords, nSteps) ->
 
 addDescribeActions = (choices) ->
 	for firstWord in LOOK_WORDS
-		choices.push new ActionChoice([firstWord], "describe")
-	choices.push new ActionChoice(["reveal"], "reveal")
+		choices.push new ActionChoice([firstWord], "describe", "#{firstWord}\n Look around you.")
+	choices.push new ActionChoice(["reveal"], "reveal", "Reveal\n Reveals the map for you, Mr. Cheater McCheaterson.")
 
 createActionChoiceSet = (map) ->
 	choices = []

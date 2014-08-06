@@ -18,6 +18,10 @@ class global.ActionChoice
 			# For purposes of matching:
 			@words.push word.toLowerCase()
 		@minimalWords = null # Set by setMinimalActionWords
+		# Handle being passed a string:
+		if typeof @describeFunc == "string"
+			describeStr = @describeFunc
+			@describeFunc = (words, nWordsNeeded) -> describeStr
 	describe: () -> 
 		return @describeFunc @rawWords, @minimalWords
 

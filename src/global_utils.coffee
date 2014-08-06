@@ -51,3 +51,8 @@ global.approxDirection = (dx, dy) ->
 	if _closeToDegree degree, -135
 		return [-1,-1]
 	return [0,0]
+
+global.STDIN = require('readline').createInterface {
+  input: process.stdin 
+  output: process.stdout
+}
