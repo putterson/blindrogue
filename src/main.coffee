@@ -1,100 +1,12 @@
-# Game =
-#   display: null
-#   map: {}
-#   engine: null
-#   player: null
-#   init: ->
-#     #@display = new ROT.Display()
-#     #document.body.appendChild @display.getContainer()
-#     @_generateMap()
-#     scheduler = new ROT.Scheduler.Simple()
-#     scheduler.add @player, true
-#     @engine = new ROT.Engine(scheduler)
-#     @engine.start()
+################################################################################
+# Executing this file runs the game. Relies on all other files being executed
+# already.
+################################################################################
+"use strict";
 
-#   _generateMap: ->
-#     digger = new ROT.Map.Digger()
-#     freeCells = []
-#     digCallback = (x, y, value) ->
-#       if value 
-#           return
-#       key = x + "," + y
-#       @map[key] = "."
-#       freeCells.push key
-
-#     digger.create digCallback.bind(this)
-#     @_generateBoxes freeCells
-#     @_drawWholeMap()
-#     @_createPlayer freeCells
-
-#   _createPlayer: (freeCells) ->
-#     index = Math.floor(ROT.RNG.getUniform() * freeCells.length)
-#     key = freeCells.splice(index, 1)[0]
-#     parts = key.split(",")
-#     x = parseInt(parts[0])
-#     y = parseInt(parts[1])
-#     @player = new Player(x, y)
-
-#   _generateBoxes: (freeCells) ->
-#     i = 0
-#     while i < 10
-#       index = Math.floor(ROT.RNG.getUniform() * freeCells.length)
-#       key = freeCells.splice(index, 1)[0]
-#       @map[key] = "*"
-#       i++
-
-#   _drawWholeMap: ->
-#     #for key of @map
-#     #  parts = key.split(",")
-#     #  x = parseInt(parts[0])
-#     #  y = parseInt(parts[1])
-#     #  @display.draw x, y, @map[key]
-
-# Player = (x, y) ->
-#   @_x = x
-#   @_y = y
-#   @_draw()
-
-# Player::act = ->
-#   Game.engine.lock()
-#   # global.addEventListener "keydown", this
-
-# Player::handleEvent = (e) ->
-#   keyMap = {}
-#   keyMap[38] = 0
-#   keyMap[33] = 1
-#   keyMap[39] = 2
-#   keyMap[34] = 3
-#   keyMap[40] = 4
-#   keyMap[35] = 5
-#   keyMap[37] = 6
-#   keyMap[36] = 7
-#   code = e.keyCode
-    
-#   # one of numpad directions? 
-#   if !(code of keyMap)
-#       return
-    
-#   # is there a free space? 
-#   dir = ROT.DIRS[8][keyMap[code]]
-#   newX = @_x + dir[0]
-#   newY = @_y + dir[1]
-#   newKey = newX + "," + newY
-#   if !(newKey of Game.map)
-#       return
-#   Game.display.draw(@_x, @_y, Game.map[@_x + "," + @_y])
-#   @_x = newX
-#   @_y = newY
-#   @_draw()
-#   global.removeEventListener("keydown", this)
-#   Game.engine.unlock()
-
-# Player::_draw = ->
-#   # Game.display.draw @_x, @_y, "@", "#ff0"
-
-# Game.init()
-
-map = new Map(40,40)
+# Predeclare 'global' state. (Local to this file)
+# Initialized in main()
+[map, view] = [null,null]
 
 generateMap = () ->
     map.generate()
@@ -109,16 +21,14 @@ generateMap = () ->
 
     for _ in [1..10]
         [iX, iY] = map.randEmptySquare()
-        itemName = randChoose ["Potion of Health", "Bō", "Amulet of Staffing"]
+        itemName = randChoose ["Ale of Health", "Bō", "Amulet of Staffing"]
         map.addObject new ItemObj(map, ITEMS[itemName], iX, iY)
 
     map.player = player
     # Compute initial FOV:
     player.computeFov()
 
-generateMap()
-view = new ViewDescriber(map)
-
+# Progresses the game world in response to a player action.
 stepWithAction = (action) ->
     messages = []
     # If we have a valid action:
@@ -147,9 +57,13 @@ stepWithAction = (action) ->
     if not process.env.BLIND
         map.print()
     for m in messages
-            console.report m
+        console.report m
 
-resolvePlayerAction = (answer) ->
+describeMap = () ->  console.report(view.describe().join("\n"))
+
+# Progresses the game world in response to a (yet unparsed) player action.
+# For actions such as 'describe' however, no time passes.
+stepWithAnswer = (answer) ->
     action = resolveAction(map, answer)
     # Did we encounter an error during parsing?
     if typeof action == 'string'
@@ -162,14 +76,22 @@ resolvePlayerAction = (answer) ->
     else
         stepWithAction(action)
     # Set the callback so that we will read again in a 'loop'
-    setReadLineCallback()
+    resetStepEvent()
 
-setReadLineCallback = () ->
-    STDIN.question "What is your action? ", resolvePlayerAction
+# Set-up for 'blocking' readline. We progress our game world in response to a read-line event.
+STDIO = require('readline').createInterface {input: process.stdin, output: process.stdout}
+resetStepEvent = () ->
+    STDIO.question "What is your action? ", stepWithAnswer
 
-if not process.env.BLIND
-    map.print()
-for m in view.describe()
-    console.report m
+# The main function.
+main = () ->
+    map = new Map(40,40)
+    generateMap()
+    view = new ViewDescriber(map)
+    if not process.env.BLIND
+        map.print()
+    describeMap()
 
-setReadLineCallback()
+    resetStepEvent()
+
+main()

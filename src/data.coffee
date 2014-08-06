@@ -79,7 +79,7 @@ UNKNOWN_POTION_DESCRIPTORS = [
 ]
 
 Consumable {
-	name: "Potion of Health"
+	name: "Ale of Health"
 	char: 'p'
 	# TODO: RNG
 	unidentifiedData: UNKNOWN_POTION_DESCRIPTORS[0]

@@ -33,7 +33,7 @@ _closeToDegree = (d1, d2) ->
 	return false
 
 global.approxDirection = (dx, dy) ->
-	degree = Math.atan2(dx, dy)
+	degree = Math.atan2(dx, dy) * 57.2957795 # Convert to degrees
 	if _closeToDegree degree, 0
 		return [0,1]
 	if _closeToDegree degree, 45
@@ -52,7 +52,3 @@ global.approxDirection = (dx, dy) ->
 		return [-1,-1]
 	return [0,0]
 
-global.STDIN = require('readline').createInterface {
-  input: process.stdin 
-  output: process.stdout
-}

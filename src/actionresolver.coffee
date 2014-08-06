@@ -48,13 +48,13 @@ class global.AttackAction
 
 	isComplete: () -> @didAttack
 	canPerform: (obj) ->
-		if target.isDead
+		if @target.isDead
 			return [false, "The #{target.getName()} is already dead!"]
 
 		dir = objDirTowards obj, @target, true # Use player sight
 		if not dir
-			return [true, "You were interrupted by an enemy's attack!"]
-		return true
+			return [false, "You have no route to the enemy!"]
+		return [true]
 
 	perform: (obj) ->
 		@nSteps--
@@ -81,10 +81,34 @@ dirToWordCombos = (dx, dy) ->
 	if dx == -1 and dy == +1 then return ["south west", "down left",  "left down" ]
 	assert false, "Bad dx=#{dx} dy=#{dy}!"
 
-MOVE_WORDS = ["Move", "Go"]
+MOVE_WORDS = ["Move"]
 ATTACK_WORDS = ["Attack", "Fight"]
+ITEMGET_WORDS = ["Get"]
 STEP_WORDS = ["Step"]
 LOOK_WORDS = ["Look", "Describe"]
+
+DIRECTIONS = ["north", "north east", "east", "south east", "south", "south west", "west", "north west"]
+addAttackActions = (choices, map) ->
+	# Holds enemies found in each direction
+	directionBuckets = {}
+	for dir in DIRECTIONS
+		directionBuckets[dir] = []
+	# Place enemies into buckets, closest enemies first (due to seenObjects call).
+	for obj in map.seenObjects(MonsterObj)
+		[dx,dy] = objApproxDirection(map.player, obj)
+		# Take the first word (uses north etc instead of up/left etc)
+		[bucket] = dirToWordCombos(dx, dy)
+		console.log dx, dy, bucket
+		directionBuckets[bucket].push(obj)
+	# Create attack options from enemies seen
+	for dir in DIRECTIONS
+		i = 1
+		for obj in directionBuckets[dir]
+			for firstWord in ATTACK_WORDS
+				words = [firstWord].concat(obj.getName().split " ").concat(dir.split " ")
+				words.push i.toString()
+				choices.push new ActionChoice(words,  new AttackAction(obj), "#{words.join " "}:\n Engage in melee combat, moving closer if necessary.")
+			i++
 
 addMoveActions = (choices, firstWords, nSteps) ->
 	for firstWord in firstWords
@@ -106,6 +130,8 @@ createActionChoiceSet = (map) ->
 	addMoveActions choices, STEP_WORDS, 1 
 	# Add move actions
 	addMoveActions choices, MOVE_WORDS, 3
+	# Add attack actions
+	addAttackActions choices, map
 	# Add look/describe actions
 	addDescribeActions choices
 
