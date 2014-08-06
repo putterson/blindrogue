@@ -144,11 +144,13 @@ stepWithAction = (action) ->
       break
   # Reset the player action (make sure we don't accidentally use it again)
   player.action = null
-  map.print()
+  if not process.env.BLIND
+    map.print()
   for m in messages
       console.report m
 
-map.print()
+if not process.env.BLIND
+  map.print()
 for m in view.describe()
     console.report m
 
