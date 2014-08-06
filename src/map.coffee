@@ -76,7 +76,7 @@ class global.Map
         {x: px, y: py} = @player
         seen = []
         for obj in @objects
-            if obj instanceof type
+            if obj instanceof type and @isSeen(obj.x, obj.y)
                 seen.push obj
         seen.sort (a,b) -> 
             return a.distanceTo(px, py) - b.distanceTo(px, py) 
