@@ -9,9 +9,9 @@ class global.Equipment
     getAmulet: () -> @getEquipped "amulet"
     getWeapon: () -> @getEquipped "weapon"
     onCalculate: (stats) ->
+        @getWeapon()?.onCalculate(stats)
         @getArmour()?.onCalculate(stats)
         @getAmulet()?.onCalculate(stats)
-        @getWeapon()?.onCalculate(stats)
 
 class global.Item
     constructor: (@itemType) ->
@@ -25,6 +25,7 @@ class global.Item
     getType: () -> @itemType.type
     getDescription: () -> @itemType.description
     getAppearsMsg: () -> @itemType.appearsMsg
+    onCalculate: (stats) -> @itemType.onCalculate(stats, @)
     onUse: (stats) -> @itemType.onUse(stats, @)
     canUse: (stats) -> 
         if @itemType.onPrereq?
@@ -69,8 +70,8 @@ class global.Stats
     	@equipment.items.push item
     useItem: (item) ->
         assert(item in @getItems())
-        elemRemove @getItems(), item
-        item.onUse(@, item)
+        if item.onUse(@, item)
+            elemRemove @getItems(), item
 
     useAttack: (E) ->
         Ed = E.derived

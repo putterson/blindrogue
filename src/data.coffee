@@ -21,6 +21,7 @@ equipX = (equipType) -> (stats, item) ->
 		stats.obj.map.events.push {type: "Unequip", message: "You unequip the #{equipped.getName()}"}
 	item.equip()
 	stats.obj.map.events.push {type: "Equip", message: "You equip the #{item.getName()}"}
+	return false # Do not consume item
 
 Weapon = (data) ->
 	data.type = "weapon"
@@ -115,6 +116,7 @@ Consumable {
 		prevHp = base.hp
 		base.hp = Math.max(derived.maxHp, base.hp + @healAmount)
 		obj.map.events.push {type: "Heal", message: "You heal for #{base.hp - prevHp} health."}
+		return true # item is consumed
 
 }
 
@@ -130,7 +132,8 @@ Weapon {
 	attackHitDescription: ["You hit with your Bō."]
 	attackMissDescription: ["You miss with your Bō."]
 	onCalculate: ({base, derived}, item) -> 
-		derived.attack = makeAttack(item.getType())
+		console.log "???"
+		derived.attack = makeAttack(item.getItemType())
 }
 
 UNKNOWN_AMULET_DESCRIPTORS = [

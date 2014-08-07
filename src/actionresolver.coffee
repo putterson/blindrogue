@@ -221,11 +221,11 @@ addPickupItemActions = (choices, map) ->
             for firstWord in ITEMGET_WORDS
                 words = "#{firstWord} #{itemObj.getName()} #{dir} #{i}".split(" ")
                 choices.push new ActionChoice words, new ItemPickupAction(itemObj)
+            i++
 
 addUseItemActions = (choices, map) ->
     stats = map.player.getStats()
     for item in stats.getItems()
-        console.log "ITEM"
         command = "Use " + item.getName()
         choices.push new ActionChoice command.split(" "), 
             new UseItemAction(item),
