@@ -137,8 +137,8 @@ dirToCompassDir = (dx, dy) ->
     return bucket
 
 MOVE_WORDS = ["Move"]
-ATTACK_WORDS = ["Attack", "Fight"]
-ITEMGET_WORDS = ["Get", "Pickup"]
+ATTACK_WORDS = ["Attack"]
+ITEMGET_WORDS = ["Get"]
 STEP_WORDS = ["Step"]
 LOOK_WORDS = ["Look"]
 
@@ -261,6 +261,10 @@ global.resolveAction = (map, string) ->
     # Show actions if not too many possibilities exist:
     if not parsedFully
         return "Could not understand action. Similar actions are:\n" + choiceDescs.join "\n"
+    # Does it end in a '?'
+    if string.indexOf('?') == string.length - 1 
+        # Show possible actions:
+        return "Possibile matches: \n" + choiceDescs.join "\n"
     if choices.length == 1
         return choices[0].action
     return "Ambiguous action. Possibilities are: \n" + choiceDescs.join "\n"

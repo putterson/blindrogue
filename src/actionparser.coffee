@@ -8,7 +8,7 @@ defaultDescribe = (words, nWordsNeeded) -> words.join " "
 
 filterPass = (str) ->
 	str = str.replace(new RegExp(' ', 'g'),'').toLowerCase(); 
-	return str.replace(new RegExp('ō', 'g'),'o')
+	return str.replace(new RegExp('ō', 'g'),'o').replace(new RegExp('\\?', 'g'),'')
 
 # ActionChoice: A possible choice of action. Many of these exist, for every combination of verb / target.
 # Takes a description function which takes the amount of words needed and returns two lines, for short and long description. 
