@@ -5,7 +5,11 @@ class global.BaseObj
         @char = char
         @x = x
         @y = y
+        @isRemoved = false
     solid: false
+    remove: () ->
+        @map.get(@x, @y).removeObject this
+        @isRemoved = true
     move: (dx, dy) ->
         @map.get(@x, @y).removeObject this
         @x += dx
@@ -39,8 +43,8 @@ class global.PlayerObj extends CombatObj
     # Used at the start of a sentence
     wrapRegularVerb: (verb) -> "You #{verb}"
     step: () ->
-        assert (not @action.isComplete(@)[0]), "Already completed the action we have queued for this step!"
-        assert @action.canPerform(@)[0], "Cannot perform the action we have queued for this step!"
+        assert (not @action.isComplete(@)), "Already completed the action we have queued for this step!"
+        assert @action.canPerform(@)[0], "Cannot perform the action e have queued for this step!"
         @action.perform(@)
         @computeFov()
 
@@ -66,7 +70,6 @@ class global.MonsterObj extends CombatObj
         @chasingPlayer = false
         # How long to chase without sight before giving up?
         @chasingTimeout = 0
-        @isDead = false
 
     getName: () -> @monsterType.name
     wrapRegularVerb: (verb) -> "The #{@getName()} #{verb}s"

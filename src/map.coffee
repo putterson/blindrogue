@@ -183,7 +183,10 @@ class global.Map
                         char = obj.consoleRepr()
                     else
                         char = sqr.char
-                    if not seen
+
+                    if char == '>' or char == '<'
+                        char = if seen then clc.greenBright char else clc.green char 
+                    else if not seen
                         char = clc.blackBright(char)
                 row_str += char
                 x += 1

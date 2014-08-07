@@ -1,27 +1,29 @@
+# 'aggresive' means attacking or moving towards an enemy
+aggresiveActionInterrupted = (obj) ->
+	if obj.map.eventOccurred "PlayerWasAttacked"
+		return [true, "You stop. You are being attacked!"]
+	return [false]
+
+# 'passive' means not attacking or moving towards an enemy
+passiveMoveActionInterrupted = (obj) ->
+	if obj.map.eventOccurred "PlayerWasAttacked"
+		return [true, "You move carefully, you are being attacked!"]
+	if obj.map.seenObjects(MonsterObj).length > 0
+		return [true, "You move carefully due to nearby enemies."]
+	else
+		items = obj.map.seenObjects(ItemObj)
+		newItems = []
+		for item in items
+			if not item.wasSeen
+				newItems.push(item.getName())
+		if newItems.length > 1
+			return [true, "You stopped to look at the " + newItems.join(", ")]
+		return [false]
 
 class global.MoveAction
-	constructor: (nSteps, dx, dy, wordsUsed) ->
-		@nSteps = nSteps
-		@dx = dx
-		@dy = dy
-		@wordsUsed = wordsUsed
-
-	isInterrupted: (obj) ->
-		if obj.map.eventOccurred "PlayerWasAttacked"
-			return [true, "You move carefully, you are being attacked!"]
-		if obj.map.seenObjects(MonsterObj).length > 0
-			return [true, "You move carefully due to nearby enemies."]
-		else
-			items = obj.map.seenObjects(ItemObj)
-			newItems = []
-			for item in items
-				if not item.wasSeen
-					newItems.push(item.getName())
-			if newItems.length > 1
-				return [true, "You stopped to look at the " + newItems.join(", ")]
-			return [false]
-
-	# No message attached because reason should be 'obvious'
+	constructor: (@nSteps, @dx, @dy, @wordsUsed) ->
+	isInterrupted: (obj) -> passiveMoveActionInterrupted obj
+	# No message attached because reason for isComplete should be 'obvious'
 	isComplete: (obj) -> (@nSteps <= 0)
 	canPerform: (obj) ->
 		if not objFindFreeDirection(obj, @dx, @dy)
@@ -34,6 +36,33 @@ class global.MoveAction
 		wordsUsed = @wordsUsed
 		obj.map.events.push {type: "PlayerMove", message: "You move #{wordsUsed}."}
 		obj.move(dx, dy)
+
+class global.MoveTowardsAction
+	# Target can be a BaseObj inheritor, or simply an object with x & y defined.
+	constructor: (@nSteps, @target, @isAggressiveAction) ->
+
+	isInterrupted: (obj) ->
+		if @isAggressiveAction
+			return aggresiveActionInterrupted obj
+		else
+			return passiveMoveActionInterrupted obj
+	isComplete: (obj) -> (@nSteps <= 0) or objNearby(obj, @target)
+	canPerform: (obj) ->
+		if @target.isRemoved # Note: relies on isRemoved==undefined -> false for non-monster objects
+			return [false, "The #{target.getName()} is already dead!"]
+
+		dir = objDirTowards obj, @target, true # Use player sight
+		if not dir
+			return [false, "You have no route to the enemy!"]
+		return [true]
+
+	perform: (obj) ->
+		@nSteps--
+		[dx, dy] = objDirTowards obj, @target, true # Use player sight
+		targetName = @target.getName()
+		obj.map.events.push {type: "PlayerMove", message: "You move towards the #{targetName}."}
+		obj.move(dx, dy)
+
 
 class global.AttackAction
 	constructor: (target) ->
@@ -48,23 +77,15 @@ class global.AttackAction
 
 	isComplete: () -> @didAttack
 	canPerform: (obj) ->
-		if @target.isDead
+		if @target.isRemoved
 			return [false, "The #{target.getName()} is already dead!"]
-
-		dir = objDirTowards obj, @target, true # Use player sight
-		if not dir
-			return [false, "You have no route to the enemy!"]
+		if not objNearby obj, @target
+			return [false, "You are too far from the enemy!"]
 		return [true]
 
-	perform: (obj) ->
-		@nSteps--
-		if objNearby obj, @target
-			obj.attack @target
-		else
-			[dx, dy] = objDirTowards obj, @target, true # Use player sight
-			targetName = @target.getName()
-			obj.map.events.push {type: "PlayerMove", message: "You move towards the #{targetName}."}
-			obj.move(dx, dy)
+	perform: (obj) -> 
+		obj.attack @target
+		@didAttack = true
 
 dirToWordCombos = (dx, dy) ->
 	words = []
@@ -88,7 +109,9 @@ STEP_WORDS = ["Step"]
 LOOK_WORDS = ["Look", "Describe"]
 
 DIRECTIONS = ["north", "north east", "east", "south east", "south", "south west", "west", "north west"]
-addAttackActions = (choices, map) ->
+
+# Monster actions are either attacking, or (m)oving (t)o a monster
+addMonsterActions = (choices, map) ->
 	# Holds enemies found in each direction
 	directionBuckets = {}
 	for dir in DIRECTIONS
@@ -104,10 +127,18 @@ addAttackActions = (choices, map) ->
 	for dir in DIRECTIONS
 		i = 1
 		for obj in directionBuckets[dir]
-			for firstWord in ATTACK_WORDS
-				words = [firstWord].concat(obj.getName().split " ").concat(dir.split " ")
-				words.push i.toString()
-				choices.push new ActionChoice(words,  new AttackAction(obj), "#{words.join " "}:\n Engage in melee combat, moving closer if necessary.")
+			attackName = map.player.getStats().getAttack().name
+			targetName = obj.getName()
+			lastWords = (targetName.split " ").concat(dir.split " ")
+			lastWords.push i.toString()
+			# TODO account for player range
+			if objNearby map.player, obj
+				for firstWord in ATTACK_WORDS
+					words = [firstWord].concat(lastWords)
+					choices.push new ActionChoice(words,  new AttackAction(obj), "#{words.join " "}:\n Strike the #{targetName} with your #{attackName}.")
+			# Always have a move-to action, even if in range. At the worst you'll be informed that you're already nearby.
+			words = ["Move", "to"].concat(lastWords)
+			choices.push new ActionChoice(words,  new MoveTowardsAction(3, obj, true), "#{words.join " "}:\n Move towards the #{targetName}.")
 			i++
 
 addMoveActions = (choices, firstWords, nSteps) ->
@@ -131,7 +162,7 @@ createActionChoiceSet = (map) ->
 	# Add move actions
 	addMoveActions choices, MOVE_WORDS, 3
 	# Add attack actions
-	addAttackActions choices, map
+	addMonsterActions choices, map
 	# Add look/describe actions
 	addDescribeActions choices
 

@@ -26,8 +26,8 @@ class global.ActionChoice
 		return @describeFunc @rawWords, @minimalWords
 
 
-# Return matched word, and rest of string.
-# 'null' is returned if nothing matches
+# Return string split with the component matched, and the rest
+# If nothing matches, returns ["", string]
 window.actionGreedyMatch = (string, wordNumber, choices) ->
 	matchedChars = 0
 	matchedWord = null
@@ -45,14 +45,16 @@ window.actionGreedyMatch = (string, wordNumber, choices) ->
 					matchedChars = i+1
 					matchedWord = word
 
-	return [matchedWord, string.substring(matchedChars)]
+	return [string.substring(0, matchedChars), string.substring(matchedChars)]
 
-# Filter choices that don't contain a word in a given position
-filterChoices = (word, wordNumber, choices) ->
+# Filter choices that don't start with a prefix, in a given word position
+filterChoices = (prefix, wordNumber, choices) ->
 	newChoices = []
 	for choice in choices
-		if choice.words.length > wordNumber and choice.words[wordNumber] == word
-			newChoices.push choice
+		if choice.words.length > wordNumber 
+			# Test whether we start with the prefix matched by actionGreedyMatch?
+			if choice.words[wordNumber].indexOf(prefix) == 0
+				newChoices.push choice
 	return newChoices
 
 # Filter choices that have more words than the least amount of words.
@@ -98,14 +100,23 @@ class global.ActionChoiceSet
 
 		wordNumber = 0
 		choices = @choices
+		longestWordLen = () ->
+			longest = 0
+			for choice in choices 
+				longest = Math.max(longest, choice.words.length)
+			return longest
+
 		while string != ""
-			[matchedWord, newString] = actionGreedyMatch(string, wordNumber, choices)
+			[matchedComponent, newString] = actionGreedyMatch(string, wordNumber, choices)
 			string = newString # Update string
-			if matchedWord == null
-				# No further parsing possible!
-				# Parsing incomplete, but return what we have now (may still be useful suggestions).
-				return [choices, false]
-			choices = filterChoices(matchedWord, wordNumber, choices)
+			if matchedComponent == ""
+				# Can we possibly parse further using the next word?
+				if longestWordLen() <= wordNumber + 1
+					# No further parsing possible!
+					# Parsing incomplete, but return what we have now (may still be useful suggestions).
+					return [choices, false]
+			else
+				choices = filterChoices(matchedComponent, wordNumber, choices)
 			wordNumber++
 		choices = filterNonMinimalChoices(choices)
 		# Parsing-completed path. Returns multiple if string is so far ambiguous. 

@@ -14,6 +14,8 @@ generateMap = () ->
     [pX, pY] = map.randEmptySquare()
     player = new PlayerObj(map, '@', pX, pY)
     map.addObject player
+    # Place an upstaircase here
+    map.get(pX,pY).char = '>'
 
     for _ in [1..10]
         [eX, eY] = map.randEmptySquare()
@@ -30,6 +32,10 @@ generateMap = () ->
 
 # Progresses the game world in response to a player action.
 stepWithAction = (action) ->
+    if action.isComplete(map.player)
+        # Assume it is a move-towards type of action!
+        console.report "You are already nearby."
+        return
     messages = []
     # If we have a valid action:
     player = map.player
@@ -87,11 +93,15 @@ resetStepEvent = () ->
 main = () ->
     map = new Map(40,40)
     generateMap()
-    view = new ViewDescriber(map)
-    if not process.env.BLIND
-        map.print()
-    describeMap()
-
-    resetStepEvent()
+    console.report describeIntroduction()
+    console.log "... "
+    continueF = (unused) ->
+        view = new ViewDescriber(map)
+        if not process.env.BLIND
+            map.print()
+        console.report(clc.magenta "You enter Dōkutsu, convinced you must return a hero or not at all.")
+        describeMap()
+        resetStepEvent()
+    setTimeout continueF, 500
 
 main()

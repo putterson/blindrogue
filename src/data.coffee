@@ -3,11 +3,11 @@ global.ITEMS = {}
 
 # Helper for monster data
 Monster = (data) ->
-	data.appears = data.appears.replace("$NAME", data.name)
+	data.appearsMsg = data.appearsMsg.replace("$NAME", data.name)
 	MONSTERS[data.name] = data
 
 Item = (data) ->
-	data.appears = data.appears.replace("$NAME", data.name)
+	data.appearsMsg = data.appearsMsg.replace("$NAME", data.name)
 	ITEMS[data.name] = data
 
 Consumable = (data) ->
@@ -27,7 +27,7 @@ Amulet = (data) ->
 ###########################################
 
 global.PLAYER_START_STATS = {
-	hp: 10
+	hp: 15
 	mp: 0
 	# 'Base' armour class -- does not account for starting equipment
 	armourClass: 0
@@ -36,7 +36,8 @@ global.PLAYER_START_STATS = {
 	attack: {
 		damage: 1
 		hitChance: 5
-		attackHitDescription: ["You kick the $ENEMY", "You punch the $ENEMY"]
+		name: "fists"
+		attackHitDescription: ["You kick the $ENEMY.", "You punch the $ENEMY."]
 		attackMissDescription: ["You try to kick the $ENEMY, but are blocked!", "You try to punch the $ENEMY, but miss!"]
 	}
 }
@@ -49,9 +50,13 @@ Monster {
 	name: "Keukegen"
 	char: "k"
 	description: "It resembles a small dog covered entirely in long hair."
-	appears: "You spot a fluffy, hostile $NAME!"
+	appearsMsg: "You spot a fluffy, hostile $NAME!"
+	deathMsg: [
+		"The $NAME yelps as it bleeds out! It is dead."
+		"The $NAME stops moving... it is dead."
+	]
 
-	hp: 10
+	hp: 3
 	mp: 0
 	armourClass: 0
 
@@ -75,7 +80,7 @@ Monster {
 ###########################################
 
 UNKNOWN_POTION_DESCRIPTORS = [
-	{name: "Shiny Potion", description: "The potion shines brilliantly.", appears: "You find a shining potion."}
+	{name: "Shiny Potion", description: "The potion shines brilliantly.", appearsMsg: "You find a shining potion."}
 ]
 
 Consumable {
@@ -86,7 +91,7 @@ Consumable {
 	type: "consumable"
 	# Only applies if identified:
 	description: "A blessed brew that heals wounds when quaffed."
-	appears: "You find a $NAME!"
+	appearsMsg: "You find a $NAME!"
 
 	healAmount: 20
 
@@ -99,7 +104,7 @@ Weapon {
 	char: 'b'
 	traits: ["staff"]
 	description: "A very tall and long staff weapon."
-	appears: "You spot a long wooden $NAME!"
+	appearsMsg: "You spot a long wooden $NAME!"
 
 	damage: 5
 	accuracy: 5
@@ -111,7 +116,7 @@ Weapon {
 }
 
 UNKNOWN_AMULET_DESCRIPTORS = [
-	{name: "Dull Amulet", description: "The amulet lacks luster.", appears: "You see a dull amulet."}
+	{name: "Dull Amulet", description: "The amulet lacks luster.", appearsMsg: "You see a dull amulet."}
 ]
 
 Amulet {
@@ -120,7 +125,7 @@ Amulet {
 	# TODO: RNG
 	unidentifiedData: UNKNOWN_POTION_DESCRIPTORS[0]
 	description: "Grants +2 attack with a staff."
-	appears: "You spot a long wooden $NAME!"
+	appearsMsg: "You spot a long wooden $NAME!"
 	onCalculate: (stats) -> 
 		attack = stats.derived.attack
 		if attack and "staff" in attack.traits

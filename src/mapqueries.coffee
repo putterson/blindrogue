@@ -46,6 +46,7 @@ global.objDirTowards = (obj1, obj2, usePlayerSight = false) ->
 			return true # Exemption for target square
 		return not map.isBlocked(x,y)
 	playerPassable = (x,y) ->
+		# assert((typeof x == 'number') and (typeof y == 'number') and not isNaN(x) and not isNaN(y))
 		if (obj2.x == x and obj2.y == y) or (obj1.x == x and obj1.y == y) 
 			return true # Exemption for target square
 		if map.isSeen(x,y)

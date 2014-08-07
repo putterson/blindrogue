@@ -8,16 +8,16 @@ class global.Equipment
 		@amulet.onCalculate(stats) unless @amulet == null
 
 class global.Attack
-	constructor: (@damage, @hitChance, @attackHitDescription, @attackMissDescription) ->
+	constructor: (@damage, @hitChance, @name, @attackHitDescription, @attackMissDescription) ->
 		# Set above
-	clone: () -> new Attack(@damage, @hitChance, @attackHitDescription, @attackMissDescription)
+	clone: () -> new Attack(@damage, @hitChance, @name, @attackHitDescription, @attackMissDescription)
 
 class global.RawStats
 	constructor: (@hp, @maxHp, @mp, @maxMp, @armourClass, @attack) ->
 		# Stores passed attributes
 	clone: () -> new RawStats(@hp, @maxHp, @mp, @maxMp, @armourClass, (if @attack then @attack.clone() else null))
 
-global.makeAttack = (attack) -> new Attack(attack.damage, attack.hitChance, attack.attackHitDescription, attack.attackMissDescription)
+global.makeAttack = (attack) -> new Attack(attack.damage, attack.hitChance, attack.name, attack.attackHitDescription, attack.attackMissDescription)
 global.makeStats = (hp, mp, armourClass, attack) -> new RawStats(hp,hp, mp,mp, armourClass, makeAttack(attack))
 
 class global.Stats
@@ -30,6 +30,7 @@ class global.Stats
 	wrapRegularVerb: (verb) -> @obj.wrapRegularVerb(verb)
 	copyBaseToDerived: () ->
 		@derived = @base.clone()
+	getAttack: () -> @derived.attack
 	# Attack an (E)nemy
 	# Return resulting flavour text
 	useAttack: (E) ->
@@ -43,11 +44,16 @@ class global.Stats
 			text = clc.red(text)
 		else
 			text = clc.blackBright(randChoose(A.attackMissDescription))
+		E.base.hp = Math.max(0, E.base.hp - A.damage)
+		if E.base.hp <= 0
+			if E.obj instanceof MonsterObj
+				text += "\n" + clc.magenta randChoose(E.obj.monsterType.deathMsg).replace("$NAME", E.getName())
+			else
+				text += "Sad day... you died."
+			E.obj.remove()
 		return text.replace("$ENEMY", E.getName()).replace("$NAME", @getName())
 
 # Create a initial stats from a stat data table (in data.coffee)
 global.makeStatsFromData = (D) ->
-    A = D.attack
-    attack = new Attack(A.damage, A.hitChance, A.attackHitDescription, A.attackMissDescription)
-    return makeStats(D.hp, D.mp, D.armourClass, attack)
+    return makeStats(D.hp, D.mp, D.armourClass, makeAttack(D.attack))
 
