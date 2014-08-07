@@ -48,8 +48,8 @@ class global.MoveTowardsAction
 			return passiveMoveActionInterrupted obj
 	isComplete: (obj) -> (@nSteps <= 0) or objNearby(obj, @target)
 	canPerform: (obj) ->
-		if @target.isRemoved # Note: relies on isRemoved==undefined -> false for non-monster objects
-			return [false, "The #{target.getName()} is already dead!"]
+		if @target.isRemoved
+			return [false, "The #{@target.getName()} is already dead!"]
 
 		dir = objDirTowards obj, @target, true # Use player sight
 		if not dir
@@ -121,7 +121,6 @@ addMonsterActions = (choices, map) ->
 		[dx,dy] = objApproxDirection(map.player, obj)
 		# Take the first word (uses north etc instead of up/left etc)
 		[bucket] = dirToWordCombos(dx, dy)
-		console.log dx, dy, bucket
 		directionBuckets[bucket].push(obj)
 	# Create attack options from enemies seen
 	for dir in DIRECTIONS

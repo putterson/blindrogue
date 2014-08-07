@@ -8,13 +8,10 @@ class global.BaseObj
         @isRemoved = false
     solid: false
     remove: () ->
-        @map.get(@x, @y).removeObject this
+        @map.removeObject this
         @isRemoved = true
     move: (dx, dy) ->
-        @map.get(@x, @y).removeObject this
-        @x += dx
-        @y += dy
-        @map.get(@x, @y).addObject this
+        @map.moveObject this, dx, dy
     distanceTo: (x, y) ->
         dx = @x - x
         dy = @y - y

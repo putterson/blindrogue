@@ -109,6 +109,11 @@ class global.Map
     isBlocked: (x,y) -> @get(x,y).solid or (@getSolidObject(x,y) != null)
 
     # Object operators
+    moveObject: (obj, dx, dy) ->
+        @get(obj.x, obj.y).addObject obj
+        obj.x += dx
+        obj.y += dy
+        @get(obj.x, obj.y).removeObject obj
     addObject: (obj) ->
         @get(obj.x, obj.y).addObject obj
         @objects.push obj
