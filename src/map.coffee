@@ -110,10 +110,10 @@ class global.Map
 
     # Object operators
     moveObject: (obj, dx, dy) ->
-        @get(obj.x, obj.y).addObject obj
+        @get(obj.x, obj.y).removeObject obj
         obj.x += dx
         obj.y += dy
-        @get(obj.x, obj.y).removeObject obj
+        @get(obj.x, obj.y).addObject obj
     addObject: (obj) ->
         @get(obj.x, obj.y).addObject obj
         @objects.push obj
@@ -134,7 +134,10 @@ class global.Map
     step: () ->
         # Ensure player goes first (otherwise action may not reflect information reported to player)
         @player.step()
-        for object in @objects
+        safeCopy = (obj for obj in @objects)
+        for object in safeCopy
+            if object.isRemoved
+                continue
             # Ensure player does not go twice
             if not (object instanceof PlayerObj)
                 object.step()

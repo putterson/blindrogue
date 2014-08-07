@@ -14,12 +14,22 @@ Consumable = (data) ->
 	data.type = "consumable"
 	Item(data)
 
+equipX = (equipType) -> (stats, item) ->
+	equipped = stats.getEquipment().getEquipped equipType
+	if equipped? 
+		equipped.unequip()
+		stats.obj.map.events.push {type: "Unequip", message: "You unequip the #{equipped.getName()}"}
+	item.equip()
+	stats.obj.map.events.push {type: "Equip", message: "You equip the #{item.getName()}"}
+
 Weapon = (data) ->
 	data.type = "weapon"
+	data.onUse = equipX "weapon"
 	Item(data)
 
 Amulet = (data) ->
 	data.type = "amulet"
+	data.onUse = equipX "amulet"
 	Item(data)
 
 ###########################################
@@ -95,8 +105,17 @@ Consumable {
 
 	healAmount: 20
 
-	onUse: (stats) ->
-		stats.base.hp = Math.max(stats.derived.maxHp, stats.base.hp + @healAmount)
+	onPrereq: ({base, derived}) ->
+		if base.hp < derived.maxHp
+			return [true]
+		else
+			return [false, "You already have max health!"]
+
+	onUse: ({base, derived, obj}) ->
+		prevHp = base.hp
+		base.hp = Math.max(derived.maxHp, base.hp + @healAmount)
+		obj.map.events.push {type: "Heal", message: "You heal for #{base.hp - prevHp} health."}
+
 }
 
 Weapon {
@@ -106,13 +125,12 @@ Weapon {
 	description: "A very tall and long staff weapon."
 	appearsMsg: "You spot a long wooden $NAME!"
 
-	damage: 5
-	accuracy: 5
-	onCalculate: (stats) -> 
-		stats.derived.attack = {
-			damage: @attack
-			traits: @traits
-		}
+	damage: 2
+	hitChance: 5
+	attackHitDescription: ["You hit with your Bō."]
+	attackMissDescription: ["You miss with your Bō."]
+	onCalculate: ({base, derived}, item) -> 
+		derived.attack = makeAttack(item.getType())
 }
 
 UNKNOWN_AMULET_DESCRIPTORS = [

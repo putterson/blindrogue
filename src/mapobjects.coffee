@@ -24,7 +24,10 @@ class global.CombatObj extends BaseObj
     solid: true
     constructor: (map, @rawStats, char, x, y) ->
         super(map, char, x,y)
-    getStats: () -> new Stats(@, @rawStats)
+        @stats = new Stats(@, @rawStats)
+    getStats: () -> 
+        @stats.recalculate()
+        return @stats
 
 class global.PlayerObj extends CombatObj
     constructor: (map, char, x, y) ->
@@ -93,13 +96,17 @@ class global.MonsterObj extends CombatObj
     consoleRepr: () -> clc.redBright(@char)
     # Used at the start of a sentence
     getNameReference: () -> "The " + @getName()
+    getAppearsMsg: () -> @monsterType.appearsMsg
 
 class global.ItemObj extends BaseObj
-    constructor: (map, @itemType, x, y) ->
-        super(map, @itemType.char, x,y)
+    constructor: (map, itemType, x, y) ->
+        super(map, itemType.char, x,y)
+        @item = new Item(itemType)
         @wasSeen = false
     step: () -> 
         if not @wasSeen and @map.isSeen @x, @y
             @wasSeen = true
-    getName: () -> @itemType.name
+    getItem: () -> @item
+    getName: () -> @item.getName()
     consoleRepr: () -> clc.blueBright(@char)
+    getAppearsMsg: () -> @item.getAppearsMsg()

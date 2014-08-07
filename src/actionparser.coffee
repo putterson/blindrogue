@@ -6,6 +6,10 @@
 
 defaultDescribe = (words, nWordsNeeded) -> words.join " "
 
+filterPass = (str) ->
+	str = str.replace(new RegExp(' ', 'g'),'').toLowerCase(); 
+	return str.replace(new RegExp('ō', 'g'),'o')
+
 # ActionChoice: A possible choice of action. Many of these exist, for every combination of verb / target.
 # Takes a description function which takes the amount of words needed and returns two lines, for short and long description. 
 class global.ActionChoice
@@ -16,7 +20,7 @@ class global.ActionChoice
 		@words = []
 		for word in @rawWords
 			# For purposes of matching:
-			@words.push word.toLowerCase()
+			@words.push filterPass(word)
 		@minimalWords = null # Set by setMinimalActionWords
 		# Handle being passed a string:
 		if typeof @describeFunc == "string"
@@ -96,8 +100,7 @@ class global.ActionChoiceSet
 	# Returns the possible choices, along with whether the parsing matched completely.
 	possibleMatches: (string) ->
 		# Remove withspace, and lower-case the string
-		string = string.replace(new RegExp(' ', 'g'),'').toLowerCase(); 
-
+		string = filterPass string
 		wordNumber = 0
 		choices = @choices
 		longestWordLen = () ->

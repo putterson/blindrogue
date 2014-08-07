@@ -62,6 +62,7 @@ stepWithAction = (action) ->
     player.action = null
     if not process.env.BLIND
         map.print()
+    console.report describePlayerStats(player.getStats())
     for m in messages
         console.report m
 
