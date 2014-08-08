@@ -64,7 +64,10 @@ class global.Map
 
     # Map query operators
     get: (x,y) -> @grid[y][x]
-    wasSeen: (x,y) -> @get(x,y).wasSeen
+    wasSeen: (x,y) -> 
+        if x < 0 or x >= @w or y < 0 or y >= @h 
+            return false
+        @get(x,y).wasSeen
     isSeen: (x,y) -> 
         for [sx, sy] in @player.seenSqrs
             if sx == x and sy == y
@@ -143,33 +146,8 @@ class global.Map
                 object.step()
         @frame++
 
-    # Generate onto our map using rot.js 'Digger' algorithm
-    generate: () ->
-        rotMap = new ROT.Map.Digger(@w, @h)
-
-        map = this
-        rotMap.create (x,y,val) -> 
-            sqr = map.get(x,y)
-            if val == 0
-                sqr.char = '.'
-                sqr.solid = false
-            else
-                sqr.char = '#'
-                sqr.solid = true
-
-        for rotRoom in rotMap.getRooms()
-            x1 = rotRoom.getLeft()
-            y1 = rotRoom.getTop()
-            x2 = rotRoom.getRight()
-            y2 = rotRoom.getBottom()
-            room = new MapRoom(x1,y1,x2,y2)
-            rotRoom.getDoors (x,y) ->
-                room.doors.push new MapDoor(x,y)
-                map.grid[y][x].char = 'E'
-            @rooms.push room
-
     # Note: console.report is node-js only!
-    print: () ->
+    print: (assumeSeen = false) ->
         console.report "FRAME #{@frame}"
         y = 0
         sep = ''
@@ -180,7 +158,7 @@ class global.Map
             row_str = '|'
             x = 0
             for sqr in row
-                seen = @player.seen(x, y)
+                seen = assumeSeen or @player.seen(x, y)
                 char = ' '
                 if seen or sqr.wasSeen
                     # First try to draw a solid object:

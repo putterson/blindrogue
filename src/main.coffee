@@ -8,24 +8,12 @@
 # Initialized in main()
 [map, view] = [null,null]
 
-generateMap = () ->
-    map.generate()
-
+spawnPlayer = (map) ->
     [pX, pY] = map.randEmptySquare()
     player = new PlayerObj(map, '@', pX, pY)
     map.addObject player
     # Place an upstaircase here
     map.get(pX,pY).char = '>'
-
-    for _ in [1..10]
-        [eX, eY] = map.randEmptySquare()
-        map.addObject new MonsterObj(map, MONSTERS["Keukegen"], eX, eY)
-
-    for _ in [1..10]
-        [iX, iY] = map.randEmptySquare()
-        itemName = randChoose ["Ale of Health", "Bō", "Amulet of Staffing"]
-        map.addObject new ItemObj(map, ITEMS[itemName], iX, iY)
-
     map.player = player
     # Compute initial FOV:
     player.computeFov()
@@ -76,8 +64,8 @@ stepWithAnswer = (answer) ->
     if typeof action == 'string'
         if action == "describe"
             console.report view.describe().join("\n")
-        else if action == "reveal"
-            map.print()
+        else if action == "reveal" or action == "fullreveal"
+            map.print(action == "fullreveal") # Print unexplored areas?
         else
             console.report action
     else
@@ -92,10 +80,10 @@ resetStepEvent = () ->
 
 # The main function.
 main = () ->
-    map = new Map(40,40)
-    generateMap()
+    map = generateMap {level: 1}
+    spawnPlayer map
     console.report describeIntroduction()
-    console.log "... "
+    console.report "... "
     continueF = (unused) ->
         view = new ViewDescriber(map)
         if not process.env.BLIND

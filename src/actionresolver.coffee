@@ -180,6 +180,8 @@ addMonsterActions = (choices, map) ->
                 else
                     # Otherwise, move one towards the enemy
                     action = new MoveTowardsAction(1, obj)
+                    if not action.canPerform(map.player)
+                        break
                     desc = "#{words.join " "}:\n Move in range of the #{targetName}, so that you can strike with your #{attackName}."
                 choices.push new ActionChoice(words, action, desc)
             # Always have a move-to action, even if in range. At the worst you'll be informed that you're already nearby.
@@ -200,7 +202,8 @@ addDoorActions = (choices, map) ->
         i = 1
         for doorObj in directionBuckets[dir]
             for prefix in ["Door", "Move to door"]
-                doorObj.getName = () -> "#{dir} door"
+                doorObj.name = "#{dir} door"
+                doorObj.getName = () -> @name
                 words = "#{prefix} #{dir} #{i}".split(" ")
                 choices.push new ActionChoice(words,  new MoveTowardsAction(3, doorObj, false), "#{words.join " "}:\n Move towards the door.")
             i++ 
@@ -218,6 +221,7 @@ addLookActions = (choices) ->
     for firstWord in LOOK_WORDS
         choices.push new ActionChoice([firstWord], "describe", "#{firstWord}\n Look around you.")
     choices.push new ActionChoice(["reveal"], "reveal", "Reveal\n Reveals the map for you, Mr. Cheater McCheaterson.")
+    choices.push new ActionChoice(["fullreveal"], "fullreveal", "FullReveal\n Reveals the map, including unexplored areas, for you, Mr. Cheater McCheaterson.")
 
 addPickupItemActions = (choices, map) ->
     # Holds items found in each direction

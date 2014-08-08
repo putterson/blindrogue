@@ -1,4 +1,5 @@
 global.MONSTERS = {}
+global.MAPDATA = []
 global.ITEMS = {}
 
 # Helper for monster data
@@ -32,6 +33,9 @@ Amulet = (data) ->
 	data.type = "amulet"
 	data.onUse = equipX "amulet"
 	Item(data)
+
+MapData = (data) ->
+	MAPDATA.push data
 
 ###########################################
 # Define player starting stats
@@ -150,4 +154,9 @@ Amulet {
 		attack = stats.derived.attack
 		if attack and "staff" in attack.traits
 			attack.damage += 2
+}
+
+MapData {
+	levels: [1..3]
+	w: 20, h: 20
 }
