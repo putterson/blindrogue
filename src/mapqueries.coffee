@@ -19,7 +19,8 @@ global.objOrthoSquaresNear = (obj) -> [
 global.objSquaresNear = (obj) -> 
 	objDiagSquaresNear(obj).concat(objOrthoSquaresNear(obj))
 
-global.objApproxDirection = (obj1, obj2) -> approxDirection obj2.x-obj1.x, obj2.y-obj2.y
+global.objApproxDirection = (obj1, obj2) -> 
+	return approxDirection obj2.x-obj1.x, obj2.y-obj1.y
 
 global.objNearby = (obj, type) ->
 	for [x,y] in objSquaresNear(obj)

@@ -27,8 +27,8 @@ if not String.prototype.trim
 
 # For approxDirection
 _closeToDegree = (d1, d2) ->
-	diff = d1 - d2
-	if Math.abs(diff % 360) <= 22.5 or 360 - Math.abs(diff % 360) <= 22.5
+	diff = (d1 - d2)+360 # Ensure positive with '%'
+	if (diff % 360) <= 22.5 or (360 - diff % 360) <= 22.5
 		return true
 	return false
 
@@ -44,11 +44,11 @@ global.approxDirection = (dx, dy) ->
 		return [1,-1]
 	if _closeToDegree degree, 180
 		return [0,-1]
-	if _closeToDegree degree, -45
-		return [-1,1]
-	if _closeToDegree degree, -90
-		return [-1,0]
-	if _closeToDegree degree, -135
+	if _closeToDegree degree, 225
 		return [-1,-1]
+	if _closeToDegree degree, 270
+		return [-1,0]
+	if _closeToDegree degree, 315
+		return [-1,1]
 	return [0,0]
 

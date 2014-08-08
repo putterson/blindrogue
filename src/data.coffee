@@ -132,7 +132,6 @@ Weapon {
 	attackHitDescription: ["You hit with your Bō."]
 	attackMissDescription: ["You miss with your Bō."]
 	onCalculate: ({base, derived}, item) -> 
-		console.log "???"
 		derived.attack = makeAttack(item.getItemType())
 }
 

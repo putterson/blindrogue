@@ -34,7 +34,7 @@ class global.MoveAction
         @nSteps--
         [dx, dy] = objFindFreeDirection(obj, @dx, @dy)
         wordsUsed = @wordsUsed
-        obj.map.events.push {type: "PlayerMove", message: "You move #{wordsUsed}."}
+        obj.map.events.push {type: "PlayerMove", message: "You move #{dirToCompassDir dx, dy}."}
         obj.move(dx, dy)
 
 class global.MoveTowardsAction
@@ -171,10 +171,17 @@ addMonsterActions = (choices, map) ->
             lastWords = (targetName.split " ").concat(dir.split " ")
             lastWords.push i.toString()
             # TODO account for player range
-            if objNearby map.player, obj
-                for firstWord in ATTACK_WORDS
-                    words = [firstWord].concat(lastWords)
-                    choices.push new ActionChoice(words,  new AttackAction(obj), "#{words.join " "}:\n Strike the #{targetName} with your #{attackName}.")
+            for firstWord in ATTACK_WORDS
+                words = [firstWord].concat(lastWords)
+
+                if objNearby map.player, obj
+                    action = new AttackAction(obj)
+                    desc = "#{words.join " "}:\n Strike the #{targetName} with your #{attackName}."
+                else
+                    # Otherwise, move one towards the enemy
+                    action = new MoveTowardsAction(1, obj)
+                    desc = "#{words.join " "}:\n Move in range of the #{targetName}, so that you can strike with your #{attackName}."
+                choices.push new ActionChoice(words, action, desc)
             # Always have a move-to action, even if in range. At the worst you'll be informed that you're already nearby.
             words = ["Move", "to"].concat(lastWords)
             choices.push new ActionChoice(words,  new MoveTowardsAction(3, obj, true), "#{words.join " "}:\n Move towards the #{targetName}.")
