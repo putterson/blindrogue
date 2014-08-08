@@ -35,16 +35,16 @@ class global.Item
         return [true]
 
 class global.Attack
-    constructor: (@damage, @hitChance, @name, @attackHitDescription, @attackMissDescription) ->
+    constructor: (@damage, @hitChance, @name, @traits, @attackHitDescription, @attackMissDescription) ->
         # Set above
-    clone: () -> new Attack(@damage, @hitChance, @name, @attackHitDescription, @attackMissDescription)
+    clone: () -> new Attack(@damage, @hitChance, @name, @traits, @attackHitDescription, @attackMissDescription)
 
 class global.RawStats
     constructor: (@hp, @maxHp, @mp, @maxMp, @armourClass, @attack) ->
         # Stores passed attributes
     clone: () -> new RawStats(@hp, @maxHp, @mp, @maxMp, @armourClass, (if @attack then @attack.clone() else null))
 
-global.makeAttack = (attack) -> new Attack(attack.damage, attack.hitChance, attack.name, attack.attackHitDescription, attack.attackMissDescription)
+global.makeAttack = (attack) -> new Attack(attack.damage, attack.hitChance, attack.name, attack.traits, attack.attackHitDescription, attack.attackMissDescription)
 global.makeStats = (hp, mp, armourClass, attack) -> new RawStats(hp,hp, mp,mp, armourClass, makeAttack(attack))
 
 class global.Stats

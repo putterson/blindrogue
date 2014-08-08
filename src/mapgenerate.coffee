@@ -12,6 +12,7 @@ global.generateMap = ({level}) ->
 
     rotMap = new ROT.Map.Digger(w, h)
     map = new Map w + PADDING*2,h + PADDING*2
+    map.level = level
 
     rotMap.create (x,y,val) -> 
         x += PADDING
@@ -45,5 +46,16 @@ global.generateMap = ({level}) ->
         [iX, iY] = map.randEmptySquare()
         itemName = randChoose ["Ale of Health", "Bō", "Amulet of Staffing"]
         map.addObject new ItemObj(map, ITEMS[itemName], iX, iY)
+
+    for _ in [1..1]
+        [eX, eY] = map.randEmptySquare()
+        # Make downstaircase
+        map.get(eX, eY).char = '<'
+
+    for _ in [1..1]
+        [eX, eY] = map.randEmptySquare()
+        # Make upstaircase
+        map.get(eX, eY).char = '>'
+
 
     return map

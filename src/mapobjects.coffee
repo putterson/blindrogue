@@ -33,8 +33,9 @@ class global.PlayerObj extends CombatObj
     constructor: (map, char, x, y) ->
         super(map, makeStatsFromData(PLAYER_START_STATS), char, x,y)
         # Create the PreciseShadowcasting
+        p = this
         @fov = new ROT.FOV.PreciseShadowcasting (x, y) ->
-            return not map.isSolid(x,y)
+            return not p.map.isSolid(x,y)
         @visionSqrs = 4
         @seenSqrs = []
         @action = null

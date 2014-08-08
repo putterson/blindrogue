@@ -45,6 +45,16 @@ class global.Map
         @frame = 1
         @events = []
 
+    getOfType: (char) ->
+        ret = []
+        for y in [0...@h-1]
+            for x in [0...@w-1]
+                if @get(x,y).char == char then ret.push [x,y]
+        return ret
+
+    getUpStairCases: () -> @getOfType ">"
+    getDownStairCases: () -> @getOfType "<"
+
     # Did an event occur last step?
     eventOccurred: (checkType) ->
         for {type} in @events
@@ -118,6 +128,7 @@ class global.Map
         obj.y += dy
         @get(obj.x, obj.y).addObject obj
     addObject: (obj) ->
+        obj.isRemoved = false
         @get(obj.x, obj.y).addObject obj
         @objects.push obj
     removeObject: (obj) ->
@@ -137,6 +148,9 @@ class global.Map
     step: () ->
         # Ensure player goes first (otherwise action may not reflect information reported to player)
         @player.step()
+        if @player.map != @
+            @frame++
+            return # Player has switched maps!
         safeCopy = (obj for obj in @objects)
         for object in safeCopy
             if object.isRemoved

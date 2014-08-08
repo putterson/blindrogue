@@ -49,6 +49,7 @@ global.PLAYER_START_STATS = {
 
 	# 'Unarmed' attack information
 	attack: {
+		traits: ["unarmed"]
 		damage: 1
 		hitChance: 5
 		name: "fists"
@@ -77,6 +78,7 @@ Monster {
 
 	# 'Unarmed' attack information
 	attack: {
+		traits: ["unarmed"]
 		damage: 1
 		hitChance: 5
 		attackHitDescription: [

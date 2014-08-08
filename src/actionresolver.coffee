@@ -83,6 +83,31 @@ class global.ItemPickupAction extends MoveTowardsAction
             return
         return super(obj)
 
+class global.UseStairsAction extends MoveTowardsAction
+    constructor: (stairsObject, downStairs) ->
+        super(10, stairsObject, false)
+        @stairsEntered = false
+        @downStairs = downStairs
+    isComplete: (obj) -> @stairsEntered
+    perform: (obj) ->
+        if @onTarget(obj)
+            level = obj.map.level 
+            if level == 1 and not @downStairs
+                obj.map.events.push {type: "CantGoUp", message: "You are not ready to leave Dōkutsu. You must return a hero."}
+            else
+                level = if @downStairs then (level + 1) else (level - 1)
+                # Move to the new map:
+                obj.map.removeObject(obj)
+                newMap = getGameMap {level}
+                # Position the player to the staircase in the new map
+                [[obj.x, obj.y]] = if @downStairs then newMap.getUpStairCases() else newMap.getDownStairCases()
+                obj.map = newMap
+                obj.map.addObject(obj)
+                obj.map.events.push {type: "UseStairs", message: "You use the #{@target.getName()}."}
+            @stairsEntered = true
+            return
+        return super(obj)
+
 class global.UseItemAction
     constructor: (@item) ->
         @wasUsed = false
@@ -139,7 +164,7 @@ dirToCompassDir = (dx, dy) ->
 MOVE_WORDS = ["Move"]
 ATTACK_WORDS = ["Attack"]
 ITEMGET_WORDS = ["Get"]
-STEP_WORDS = ["Step"]
+STEP_WORDS = ["Take a step"]
 LOOK_WORDS = ["Look"]
 
 DIRECTIONS = ["north", "north east", "east", "south east", "south", "south west", "west", "north west"]
@@ -193,6 +218,8 @@ addDoorActions = (choices, map) ->
     # Holds doors found in each direction
     seenDoors = []
     for [x,y] in map.player.seenSqrs
+        if map.player.x == x and map.player.y == y
+            continue # Don't include actions for doors directly beneath us
         # Is it a door?
         if map.get(x,y).char == 'E' then seenDoors.push {x: x,y: y, solid: false}
     # Place doors into buckets
@@ -214,7 +241,7 @@ addMoveActions = (choices, firstWords, nSteps) ->
             for dy in [-1 .. +1]
                 if dx != 0 or dy != 0
                     for dirWords in dirToWordCombos dx, dy
-                        words = [firstWord].concat(dirWords.split " ")
+                        words = "#{firstWord} #{dirWords}".split " "
                         choices.push new ActionChoice(words, new MoveAction(nSteps, dx, dy, dirWords))
 
 addLookActions = (choices) ->
@@ -242,6 +269,24 @@ addUseItemActions = (choices, map) ->
             new UseItemAction(item),
             "#{command}:\n Use the #{item.getName()}: #{item.getDescription()}"
 
+addStairsActions = (choices, map) ->
+    # Holds doors found in each direction
+    seenStairs = []
+    for [x,y] in map.player.seenSqrs
+        # Is it a downstaircase?
+        {char} = map.get(x,y)
+        if char == '>' then seenStairs.push {x: x,y: y, solid: false, isDown: false, words: "Stairs up", getName: () -> "stairs up"}
+        if char == '<' then seenStairs.push {x: x,y: y, solid: false, isDown: true, words: "Stairs down", getName: () -> "stairs down"}
+
+    # Holds stairs found in each direction
+    directionBuckets = makeObjectDirBuckets map, seenStairs
+    for dir in DIRECTIONS
+        i = 1
+        for doorObj in directionBuckets[dir]
+            words = "#{doorObj.words} #{dir} #{i}".split(" ")
+            choices.push new ActionChoice words, new UseStairsAction(doorObj, doorObj.isDown)
+            i++
+
 createActionChoiceSet = (map) ->
     choices = []
     # Add step actions
@@ -254,6 +299,8 @@ createActionChoiceSet = (map) ->
     addLookActions choices
     # Move-to door actions
     addDoorActions choices, map
+    # Stairs actions
+    addStairsActions choices, map
     # Add pickup item actions
     addUseItemActions choices, map
     # Add use item actions
