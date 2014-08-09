@@ -46,8 +46,7 @@ stepWithAction = (action) ->
             break
     # Reset the player action (make sure we don't accidentally use it again)
     player.action = null
-    if not process.env.BLIND
-        map.print()
+    map.print(false, process.env.BLIND?)
     console.report describePlayerStats(player.getStats())
     for m in messages
         console.report m
@@ -93,8 +92,7 @@ main = () ->
     console.report "... "
     continueF = (unused) ->
         view = new ViewDescriber(map)
-        if not process.env.BLIND
-            map.print()
+        map.print(false, process.env.BLIND?)
         console.report(clc.magenta "You enter Dōkutsu, convinced you must return a hero or not at all.")
         describeMap()
         resetStepEvent()

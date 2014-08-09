@@ -161,7 +161,7 @@ class global.Map
         @frame++
 
     # Note: console.report is node-js only!
-    print: (assumeSeen = false) ->
+    print: (assumeSeen = false, assumeNotSeen = false) ->
         console.report "FRAME #{@frame}"
         y = 0
         sep = ''
@@ -172,9 +172,9 @@ class global.Map
             row_str = '|'
             x = 0
             for sqr in row
-                seen = assumeSeen or @player.seen(x, y)
+                seen = @player.seen(x, y)
                 char = ' '
-                if seen or sqr.wasSeen
+                if seen or sqr.wasSeen or assumeSeen
                     # First try to draw a solid object:
                     obj = @getSolidObject(x, y)
                     if obj == null
@@ -183,6 +183,8 @@ class global.Map
                         char = obj.consoleRepr()
                     else
                         char = sqr.char
+                    if assumeNotSeen and char != '@'
+                        char = ' '
 
                     if char == '>' or char == '<'
                         char = if seen then clc.greenBright char else clc.green char 

@@ -162,3 +162,15 @@ MapData {
 	levels: [1..3]
 	w: 20, h: 20
 }
+
+MapData {
+	levels: [4..7]
+	w: 20, h: 40
+}	
+
+MapData {
+	levels: [4..7]
+	w: 40, h: 20
+}
+
+
