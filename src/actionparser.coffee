@@ -41,20 +41,19 @@ class global.ActionChoice
 		@matchedChars = 0
 		@matchedWords = 0
 		@firstWordMatched = false
+		@lastWordMatched = false
 
 	setMatchStats: (string) ->
 		@_resetMatchStats()
 		firstWord = true
-		offset = 0
-		for word in @words
-			nMatched = findMatchingCharacters(word, string, offset)
+		for i in [0..@words.length-1]
+			word = @words[i]
+			nMatched = findMatchingCharacters(word, string, @matchedChars)
 			if nMatched > 0
-				if firstWord
-					@firstWordMatched = true
+				if i == 0 then @firstWordMatched = true
+				if i == @words.length-1 then @lastWordMatched = true
 				@matchedWords++
 			@matchedChars += nMatched
-			offset += nMatched
-			firstWord = false
 
 	describe: () -> 
 		return @describeFunc @rawWords, @minimalWords
@@ -136,12 +135,16 @@ class global.ActionChoiceSet
 
 		# Filter inferior matches
 		[choices, mostMatched] = filterShorterMatches(choices)
+		# console.log "C0 #{(c.describe() for c in choices).join "\n"}"
 
 		firstWordMatched = false
+		lastWordMatched = false
 		allWordsMatched = false
 		for choice in choices
 			if choice.firstWordMatched
 				firstWordMatched = true
+			if choice.lastWordMatched
+				lastWordMatched = true
 			if choice.matchedWords >= choice.words.length
 				allWordsMatched = true
 
@@ -149,12 +152,17 @@ class global.ActionChoiceSet
 		if not firstWordMatched
 			return [choices, false]
 
+		# console.log "C1 #{(c.describe() for c in choices).join "\n"}"
 		# Otherwise, filter choices without first word matched
-		choices = (c for c in choices when c.firstWordMatched)
-
+		# choices = (c for c in choices when c.firstWordMatched)
+		# console.log "C2 #{(c.describe() for c in choices).join "\n"}"
 		# If a choice matched all words, filter all choices that don't match all words
 		if allWordsMatched
 			choices = (c for c in choices when c.matchedWords >= c.words.length)
+		if lastWordMatched
+			choices = (c for c in choices when c.lastWordMatched)
+
+		# console.log "C3 #{(c.describe() for c in choices).join "\n"}"
 
 		# Return current choices, and whether parsing of the string was completed fully
 		parsingComplete = (mostMatched >= string.length)

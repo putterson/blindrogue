@@ -156,7 +156,7 @@ class global.ViewDescriber
 			if t not in prev
 				m.push msg(t)
 		for t in prev
-			if t not in cur and t instanceof MonsterObj
+			if not t.isRemoved and t not in cur and t instanceof MonsterObj
 				m.push 'You lose sight of ' + t.monsterType.name
 		return m
 

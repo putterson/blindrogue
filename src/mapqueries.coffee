@@ -87,3 +87,84 @@ global.objFindFreeDirection = (obj, dx, dy) ->
 		if free(0, dy) 
 			return [0, dy]
 	return null
+
+global.objPathInDirection = (obj, dirX, dirY, lookAhead) ->
+	map = obj.map
+	minX = Math.max(obj.x - lookAhead, 0)
+	maxX = Math.min(obj.x + lookAhead, map.w - 1)
+	minY = Math.max(obj.y - lookAhead, 0)
+	maxY = Math.min(obj.y + lookAhead, map.h - 1)
+	# Populate the grid:
+	grid = []
+	for y in [minY..maxY]
+		row = []
+		for x in [minX..maxX]
+			row.push {x, y, visited: false, open: false, distance: 1000, originNode: null, solid: (not map.wasSeen(x,y)) or map.isSolid(x,y)}
+		grid.push row
+
+	openNodes = []
+	visitNode = (originNode, x,y, distance) ->
+		if originNode? and originNode.x == x and originNode.y == y
+			return
+		# Check bounds
+		if x < minX or y < minY or x > maxX or y > maxY
+			return
+		node = grid[y - minY][x - minX]
+		if not node.solid and (not node.visited or node.distance >= distance)
+			# Don't do much if same distance, but might be 'more orthogonal' origin node
+			if node.distance == distance
+				if (node.x == originNode.x) or (node.y == originNode.y)
+					node.originNode = originNode
+				# Don't need to do the rest, return.
+				return
+			node.distance = distance
+			node.visited = true
+			if not node.open
+				node.open = true
+				openNodes.push node
+			node.originNode = originNode
+	visitNode(null, obj.x, obj.y, 0)
+	# Solve all paths
+	while openNodes.length > 0
+		minDist = 1000
+		minNode = null
+		for node in openNodes
+			if node.distance < minDist
+				minDist = node.distance
+				minNode = node
+		for dy in [-1..1]
+			for dx in [-1..1] 
+				visitNode(node, node.x + dx, node.y + dy, node.distance + 1)
+		elemRemove(openNodes, node)
+		node.open = false
+	# Find point that maximizes distance along the direction
+	maxScore = 0
+	maxNode = null
+	for row in grid
+		for node in row when node.visited
+			dX = (node.x - obj.x)
+			dY = (node.y - obj.y)
+			score = dX * dirX + dY * dirY
+			# Penalize for moving in wrong dimension, just a bit
+			if dirX == 0 then score -= Math.abs(dX) / 100
+			if dirY == 0 then score -= Math.abs(dY) / 100
+			console.log "node #{node.x - obj.x}, #{node.y - obj.y}, #{score}, #{maxScore}, #{maxNode}"
+			if score > maxScore
+				maxScore = score
+				maxNode = node
+
+	# console.log "maxNode #{maxNode.x - obj.x}, #{maxNode.y - obj.y}, #{maxScore}"
+	if maxNode == null
+		return null
+	# Back-track to first square moved to
+	node = maxNode
+	while true # Should return out of loop!
+		if node.originNode.originNode == null
+			return [node.x - obj.x, node.y - obj.y]
+		node = node.originNode
+
+global.objFreePathInDirection = (obj, dirX, dirY, lookAhead) ->
+	dir = objPathInDirection obj, dirX, dirY, lookAhead
+	if dir == null
+		return null
+	return objFindFreeDirection obj, dir[0], dir[1]

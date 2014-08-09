@@ -45,7 +45,8 @@ class global.PlayerObj extends CombatObj
     wrapRegularVerb: (verb) -> "You #{verb}"
     step: () ->
         assert (not @action.isComplete(@)), "Already completed the action we have queued for this step!"
-        assert @action.canPerform(@)[0], "Cannot perform the action e have queued for this step!"
+        # Commented out because can be expensive:
+        # assert @action.canPerform(@)[0], "Cannot perform the action e have queued for this step!"
         @action.perform(@)
         @computeFov()
 
