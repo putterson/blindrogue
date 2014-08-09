@@ -110,7 +110,6 @@ class global.ItemPickupAction extends MoveTowardsAction
     isComplete: (obj) -> @itemPickedUp
     perform: (obj) ->
         if @onTarget(obj)
-            console.log "PICKUP"
             obj.getStats().addItem(@target.getItem())
             obj.map.events.push {type: "ItemPickup", message: "You pick up the #{@target.getName()}."}
             @target.remove()
@@ -237,7 +236,8 @@ addMonsterActions = (choices, map) ->
             attackName = map.player.getStats().getAttack().name
             targetName = obj.getName()
             lastWords = (targetName.split " ").concat(dir.split " ")
-            lastWords.push i.toString()
+            if directionBuckets[dir].length > 1
+                lastWords.push i.toString()
             # TODO account for player range
             for firstWord in ATTACK_WORDS
                 words = [firstWord].concat(lastWords)
@@ -271,10 +271,11 @@ addDoorActions = (choices, map) ->
     for dir in DIRECTIONS
         i = 1
         for doorObj in directionBuckets[dir]
+            id = if directionBuckets[dir].length > 1 then " #{i}" else ""
             for prefix in ["Door", "Move to door"]
                 doorObj.name = "#{dir} door"
                 doorObj.getName = () -> @name
-                words = "#{prefix} #{dir} #{i}".split(" ")
+                words = "#{prefix} #{dir}#{id}".split(" ")
                 choices.push new ActionChoice(words,  new MoveTowardsAction(3, doorObj, false), "#{words.join " "}:\n Move towards the door.")
             i++ 
 
@@ -299,8 +300,9 @@ addPickupItemActions = (choices, map) ->
     for dir in DIRECTIONS
         i = 1
         for itemObj in directionBuckets[dir]
+            id = if directionBuckets[dir].length > 1 then " #{i}" else ""
             for firstWord in ITEMGET_WORDS
-                words = "#{firstWord} #{itemObj.getName()} #{dir} #{i}".split(" ")
+                words = "#{firstWord} #{itemObj.getName()} #{dir}#{id}".split(" ")
                 choices.push new ActionChoice words, new ItemPickupAction(itemObj)
             i++
 
@@ -313,9 +315,9 @@ addUseItemActions = (choices, map) ->
             "#{command}:\n Use the #{item.getName()}: #{item.getDescription()}"
 
 addExploreActions = (choices) ->
-    choices.push new ActionChoice "Explore", 
+    choices.push new ActionChoice ["Explore"], 
         new ExploreAction(10),
-        "Explore:\n Seek out unexplored areas."
+        "ExploreAction:\n Seek out unexplored areas."
 
 addStairsActions = (choices, map) ->
     # Holds doors found in each direction
@@ -333,8 +335,9 @@ addStairsActions = (choices, map) ->
     for dir in DIRECTIONS
         i = 1
         for doorObj in directionBuckets[dir]
+            id = if directionBuckets[dir].length > 1 then " #{i}" else ""
             for [prefix, useStairs, desc] in [["Use stairs", true, "Go towards, and use, the staircase"], ["Move to stairs", false, "Go towards the staircase"]]
-                words = "#{prefix} #{doorObj.dir} #{dir} #{i}".split(" ")
+                words = "#{prefix} #{doorObj.dir} #{dir}#{id}".split(" ")
                 choices.push new ActionChoice words, new MoveToStairsAction(doorObj, doorObj.isDown, useStairs), "#{prefix} #{doorObj.dir}:\n #{desc}."
             i++
 

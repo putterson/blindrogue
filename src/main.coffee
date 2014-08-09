@@ -52,7 +52,7 @@ stepWithAction = (action) ->
         map.print(false, process.env.SEMIBLIND?)
     # console.report clc.blackBright "(Action: #{action.description.split})"
     console.report describePlayerStats(player.getStats())
-    console.report "The map is #{parseInt map.percentExplored()*100}% explored."
+    console.report "Floor #{map.level} is #{parseInt map.percentExplored()*100}% explored."
     for m in messages
         console.report m
 

@@ -27,6 +27,7 @@ class global.ActionChoice
 	# Number of words needed effects autocomplete suggestion.
 	# Eg 'fight Keugeken north 1' if only 1 monster total can be 'fight Keugeken north'
 	constructor: (@rawWords, @action, @describeFunc = defaultDescribe) ->
+		assert typeof @rawWords != "string", "rawWords should be an array!"
 		@words = []
 		for word in @rawWords
 			# For purposes of matching:
@@ -51,7 +52,7 @@ class global.ActionChoice
 			nMatched = findMatchingCharacters(word, string, @matchedChars)
 			if nMatched > 0
 				if i == 0 then @firstWordMatched = true
-				if i == @words.length-1 then @lastWordMatched = true
+				if i == @words.length - 1 then @lastWordMatched = true
 				@matchedWords++
 			@matchedChars += nMatched
 
@@ -135,6 +136,7 @@ class global.ActionChoiceSet
 
 		# Filter inferior matches
 		[choices, mostMatched] = filterShorterMatches(choices)
+		# console.log "C1 #{(c.describe() for c in choices).join "\n"}"
 
 		firstWordMatched = false
 		lastWordMatched = false
@@ -154,10 +156,15 @@ class global.ActionChoiceSet
 		# Otherwise, filter choices without first word matched
 		# If a choice matched all words, filter all choices that don't match all words
 		choices = (c for c in choices when c.firstWordMatched)
+		# console.log "C2 #{(c.describe() for c in choices).join "\n"}"
+
 		if allWordsMatched
 			choices = (c for c in choices when c.matchedWords >= c.words.length)
+		# console.log "C3 #{(c.describe() + "," + c.lastWordMatched for c in choices).join "\n"}"
+
 		if lastWordMatched
 			choices = (c for c in choices when c.lastWordMatched)
+		# console.log "C4 #{(c.describe() for c in choices).join "\n"}"
 
 		# Return current choices, and whether parsing of the string was completed fully
 		parsingComplete = (mostMatched >= string.length)
