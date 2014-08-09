@@ -96,7 +96,7 @@ filterShorterMatches = (choices) ->
 	mostMatched = 0
 	for {matchedChars} in choices
 		mostMatched = Math.max matchedChars, mostMatched
-	choices = (c for c in choices when c.matchedChars == mostMatched)
+	choices = (c for c in choices when c.matchedChars >= mostMatched)
 	return [choices, mostMatched]
 
 class global.ActionChoiceSet
@@ -135,7 +135,6 @@ class global.ActionChoiceSet
 
 		# Filter inferior matches
 		[choices, mostMatched] = filterShorterMatches(choices)
-		# console.log "C0 #{(c.describe() for c in choices).join "\n"}"
 
 		firstWordMatched = false
 		lastWordMatched = false
@@ -152,71 +151,15 @@ class global.ActionChoiceSet
 		if not firstWordMatched
 			return [choices, false]
 
-		# console.log "C1 #{(c.describe() for c in choices).join "\n"}"
 		# Otherwise, filter choices without first word matched
-		# choices = (c for c in choices when c.firstWordMatched)
-		# console.log "C2 #{(c.describe() for c in choices).join "\n"}"
 		# If a choice matched all words, filter all choices that don't match all words
+		choices = (c for c in choices when c.firstWordMatched)
 		if allWordsMatched
 			choices = (c for c in choices when c.matchedWords >= c.words.length)
 		if lastWordMatched
 			choices = (c for c in choices when c.lastWordMatched)
 
-		# console.log "C3 #{(c.describe() for c in choices).join "\n"}"
-
 		# Return current choices, and whether parsing of the string was completed fully
 		parsingComplete = (mostMatched >= string.length)
 		return [choices, parsingComplete]
 
-
-		# Filter choices with less than maximum characters matched
-
-
-		# # Remove withspace, and lower-case the string
-		# string = filterPass string
-		# wordNumber = 0
-		# choices = @choices
-		# invalidated = false
-		# longestWordLen = () ->
-		# 	longest = 0
-		# 	for choice in choices 
-		# 		longest = Math.max(longest, choice.words.length)
-		# 	return longest
-
-		# choice._resetMatchCounts() for choice in choices
-		# while string != ""
-		# 	[matchedComponent, newString] = actionGreedyMatch(string, wordNumber, choices)
-		# 	string = newString # Update string
-		# 	if matchedComponent == ""
-		# 		# Don't allow skipping the first word:
-		# 		if wordNumber == 0
-		# 			invalidated = true
-
-		# 		# Can we possibly parse further using the next word?
-		# 		if longestWordLen() <= wordNumber + 1
-		# 			# No further parsing possible!
-		# 			# Parsing incomplete, but return what we have now (may still be useful suggestions).
-		# 			return [choices, false]
-		# 	else
-		# 		choices = filterChoices(matchedComponent, wordNumber, choices)
-		# 	choiceDescs = []
-		# 	for choice in choices
-		# 		choiceDescs.push choice.describe()
-		# 	console.log "choices #{matchedComponent} #{newString} #{choiceDescs.join "\n"}"
-		# 	wordNumber++
-		# # Does anything take up all the words?
-		# wordFullyParsed = false
-		# for choice in @choices 
-		# 	console.log "inprog #{wordNumber} vs #{choice.words.length} (#{choice.words})"
-		# 	if wordNumber >= choice.words.length
-		# 		wordFullyParsed = true
-		# 		break
-		# console.log "wordFullyParsed #{wordFullyParsed}"
-		# # Filter anything not fully parsed:
-		# if wordFullyParsed
-		# 	choices = filterNonMinimalChoices(choices)
-
-		# # Parsing-completed path. Returns multiple if string is so far ambiguous. 
-		# # May have been invalidated (ie not matching first word)
-		# # in which case we still show potential results of interest.
-		# return [choices, (not invalidated)]

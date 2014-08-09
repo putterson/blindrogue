@@ -111,6 +111,16 @@ class global.Map
                 return obj
         return null
 
+    percentExplored: () ->
+        numFree = 0
+        numSeen = 0
+        for row in @grid
+            for obj in row 
+                if not obj.solid
+                    numFree++
+                    if obj.wasSeen
+                        numSeen++
+        return numSeen / numFree
     # For purposes of drawing mainly
     getTopObject: (x, y) ->
         objs = @getObjects(x,y)

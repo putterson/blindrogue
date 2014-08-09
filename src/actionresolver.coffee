@@ -21,7 +21,7 @@ passiveMoveActionInterrupted = (obj) ->
         return [false]
 
 class global.MoveAction
-    constructor: (@nSteps, @dx, @dy, @wordsUsed) ->
+    constructor: (@nSteps, @dx, @dy) ->
         @path = null
         @pathI = 0
     isInterrupted: (obj) -> passiveMoveActionInterrupted obj
@@ -29,7 +29,7 @@ class global.MoveAction
     isComplete: (obj) -> (@nSteps <= 0)
     canPerform: (obj) ->
         # Rely on canPerform being called before every perform
-        if not @path? then @path = objPathInDirection(obj, @dx, @dy, @nSteps+1)
+        if not @path? then @path = objPathInDirection(obj, @dx, @dy, @nSteps)
         if @path? 
             dir = @path[@pathI]
             if dir? 
@@ -42,7 +42,33 @@ class global.MoveAction
         @nSteps--
         [dx, dy] = @path[@pathI++]
         [dx, dy] = objFindFreeDirection(obj, dx, dy)
-        wordsUsed = @wordsUsed
+        obj.map.events.push {type: "PlayerMove", message: "You move #{dirToCompassDir dx, dy}."}
+        obj.move(dx, dy)
+
+class global.ExploreAction
+    constructor: (@nSteps) ->
+        @path = null
+        @pathI = 0
+    isInterrupted: (obj) -> passiveMoveActionInterrupted obj
+    # No message attached because reason for isComplete should be 'obvious'
+    isComplete: (obj) -> (@nSteps <= 0)
+    canPerform: (obj) ->
+        # Rely on canPerform being called before every perform
+        if not @path? or not @path[@pathI]? then @path = objPathForMapExplore(obj, @nSteps)
+        if @path? 
+            dir = @path[@pathI]
+            if dir? 
+                newDir = objFindFreeDirection(obj, dir[0], dir[1])
+                if newDir? 
+                    return [true]
+                else
+                    return [false, describeBlockingSquare(obj.map, obj.x + dir[0], obj.y + dir[1])]
+        return [false, "There is nothing unexplored nearby."]
+
+    perform: (obj) ->
+        @nSteps--
+        [dx, dy] = @path[@pathI++]
+        [dx, dy] = objFindFreeDirection(obj, dx, dy)
         obj.map.events.push {type: "PlayerMove", message: "You move #{dirToCompassDir dx, dy}."}
         obj.move(dx, dy)
 
@@ -259,7 +285,7 @@ addMoveActions = (choices, firstWords, nSteps) ->
                 if dx != 0 or dy != 0
                     for dirWords in dirToWordCombos dx, dy
                         words = "#{firstWord} #{dirWords}".split " "
-                        choices.push new ActionChoice(words, new MoveAction(nSteps, dx, dy, dirWords))
+                        choices.push new ActionChoice(words, new MoveAction(nSteps, dx, dy))
 
 addLookActions = (choices) ->
     for firstWord in LOOK_WORDS
@@ -286,10 +312,17 @@ addUseItemActions = (choices, map) ->
             new UseItemAction(item),
             "#{command}:\n Use the #{item.getName()}: #{item.getDescription()}"
 
+addExploreActions = (choices) ->
+    choices.push new ActionChoice "Explore", 
+        new ExploreAction(10),
+        "Explore:\n Seek out unexplored areas."
+
 addStairsActions = (choices, map) ->
     # Holds doors found in each direction
     seenStairs = []
-    for [x,y] in map.player.seenSqrs
+    for [x,y] in map.getUpStairCases() .concat map.getDownStairCases()
+        if not map.wasSeen(x,y)
+            continue
         # Is it a downstaircase?
         {char} = map.get(x,y)
         if char == '>' then seenStairs.push {x: x,y: y, solid: false, isDown: false, dir: "up", getName: () -> "stairs #{@dir}"}
@@ -315,6 +348,8 @@ createActionChoiceSet = (map) ->
     addMonsterActions choices, map
     # Add look/describe actions
     addLookActions choices
+    # Exploring the map
+    addExploreActions choices
     # Move-to door actions
     addDoorActions choices, map
     # Stairs actions

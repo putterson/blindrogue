@@ -88,7 +88,7 @@ global.objFindFreeDirection = (obj, dx, dy) ->
 			return [0, dy]
 	return null
 
-global.objPathInDirection = (obj, dirX, dirY, lookAhead) ->
+global.objFloodFillPath = (obj, squarePicker, lookAhead) ->
 	map = obj.map
 	minX = Math.max(obj.x - lookAhead, 0)
 	maxX = Math.min(obj.x + lookAhead, map.w - 1)
@@ -137,30 +137,8 @@ global.objPathInDirection = (obj, dirX, dirY, lookAhead) ->
 				visitNode(node, node.x + dx, node.y + dy, node.distance + 1)
 		elemRemove(openNodes, node)
 		node.open = false
-	# Find point that maximizes distance along the direction
-	maxScore = 0
-	maxNodes = []
-	for row in grid
-		for node in row when node.visited
-			dX = (node.x - obj.x)
-			dY = (node.y - obj.y)
-			score = dX * dirX + dY * dirY
-			# Penalize for moving in wrong dimension, just a bit
-			if dirX == 0 then score -= Math.abs(dX) / 100
-			if dirY == 0 then score -= Math.abs(dY) / 100
-			console.log "node #{node.x - obj.x}, #{node.y - obj.y}, #{score}, #{maxScore}, #{maxNodes.length}"
-			if score == maxScore
-				maxNodes.push node
-			else if score > maxScore
-				maxScore = score
-				maxNodes = [node]
-
-	# console.log "maxNode #{maxNode.x - obj.x}, #{maxNode.y - obj.y}, #{maxScore}"
-	if maxScore == 0 or maxNodes.length == 0
-		return null
-
-	# Back-track to first square moved to
-	node = randChoose maxNodes
+	node = squarePicker(grid)
+	if node == null then return null
 	path = []
 	while true # Recreate the path
 		{originNode} = node
@@ -171,6 +149,55 @@ global.objPathInDirection = (obj, dirX, dirY, lookAhead) ->
 		node = originNode
 	path.reverse()
 	return path
+
+
+
+global.objPathForMapExplore = (obj, lookAhead) ->
+	squarePicker = (grid) ->
+		map = obj.map
+		# Find point that maximizes distance along the direction
+		minDist = 0
+		bestNodes = []
+		for row in grid
+			for node in row
+				{distance, visited, x, y} = node
+				if visited and not map.wasSeen(x, y)
+					if distance == minDist
+						bestNodes.push node
+					else if distance > minDist
+						minDist = distance
+						bestNodes = [node]
+
+		if minDist == 0 or bestNodes.length == 0
+			return null
+		return randChoose bestNodes
+	return objFloodFillPath(obj, squarePicker, lookAhead)
+
+global.objPathInDirection = (obj, dirX, dirY, lookAhead) ->
+	squarePicker = (grid) ->
+		# Find point that maximizes distance along the direction
+		maxScore = 0
+		maxNodes = []
+		for row in grid
+			for node in row when node.visited
+				dX = (node.x - obj.x)
+				dY = (node.y - obj.y)
+				score = dX * dirX + dY * dirY
+				# Penalize for moving in wrong dimension, just a bit
+				if dirX == 0 then score -= Math.abs(dX) / 100
+				if dirY == 0 then score -= Math.abs(dY) / 100
+				# console.log "node #{node.x - obj.x}, #{node.y - obj.y}, #{score}, #{maxScore}, #{maxNodes.length}"
+				if score == maxScore
+					maxNodes.push node
+				else if score > maxScore
+					maxScore = score
+					maxNodes = [node]
+
+		# console.log "maxNode #{maxNode.x - obj.x}, #{maxNode.y - obj.y}, #{maxScore}"
+		if maxScore == 0 or maxNodes.length == 0
+			return null
+		return randChoose maxNodes
+	return objFloodFillPath(obj, squarePicker, lookAhead)
 
 # global.objFreePathInDirection = (obj, dirX, dirY, lookAhead) ->
 # 	dir = objPathInDirection obj, dirX, dirY, lookAhead
