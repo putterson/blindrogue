@@ -47,6 +47,7 @@ stepWithAction = (action) ->
     # Reset the player action (make sure we don't accidentally use it again)
     player.action = null
     map.print(false, process.env.BLIND?)
+    # console.report clc.blackBright "(Action: #{action.description.split})"
     console.report describePlayerStats(player.getStats())
     for m in messages
         console.report m

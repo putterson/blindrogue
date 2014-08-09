@@ -10,6 +10,16 @@ filterPass = (str) ->
 	str = str.replace(new RegExp(' ', 'g'),'').toLowerCase(); 
 	return str.replace(new RegExp('ō', 'g'),'o').replace(new RegExp('\\?', 'g'),'')
 
+findMatchingCharacters = (word, string, offset) ->
+	matchedChars = 0
+	len = Math.min(word.length, string.length - offset)
+	for i in [0..len-1]
+		if word[i] == string[i + offset]
+			matchedChars = (i+1)
+		else
+			break
+	return matchedChars
+
 # ActionChoice: A possible choice of action. Many of these exist, for every combination of verb / target.
 # Takes a description function which takes the amount of words needed and returns two lines, for short and long description. 
 class global.ActionChoice
@@ -21,14 +31,35 @@ class global.ActionChoice
 		for word in @rawWords
 			# For purposes of matching:
 			@words.push filterPass(word)
+		@_resetMatchStats()
 		@minimalWords = null # Set by setMinimalActionWords
 		# Handle being passed a string:
 		if typeof @describeFunc == "string"
 			describeStr = @describeFunc
 			@describeFunc = (words, nWordsNeeded) -> describeStr
+	_resetMatchStats: () ->
+		@matchedChars = 0
+		@matchedWords = 0
+		@firstWordMatched = false
+
+	setMatchStats: (string) ->
+		@_resetMatchStats()
+		firstWord = true
+		offset = 0
+		for word in @words
+			nMatched = findMatchingCharacters(word, string, offset)
+			if nMatched > 0
+				if firstWord
+					@firstWordMatched = true
+				@matchedWords++
+			@matchedChars += nMatched
+			offset += nMatched
+			firstWord = false
+
 	describe: () -> 
 		return @describeFunc @rawWords, @minimalWords
 
+tryMatch = (string, choice) ->
 
 # Return string split with the component matched, and the rest
 # If nothing matches, returns ["", string]
@@ -61,16 +92,13 @@ filterChoices = (prefix, wordNumber, choices) ->
 				newChoices.push choice
 	return newChoices
 
-# Filter choices that have more words than the least amount of words.
-filterNonMinimalChoices = (choices) ->
-	leastN = 999 # Arbitrarily large 
-	for {words} in choices
-		leastN = Math.min words.length, leastN
-	newChoices = []
-	for choice in choices
-		if choice.words.length <= leastN
-			newChoices.push choice
-	return newChoices
+# Filter choices that have less characters matched than the max matched
+filterShorterMatches = (choices) ->
+	mostMatched = 0
+	for {matchedChars} in choices
+		mostMatched = Math.max matchedChars, mostMatched
+	choices = (c for c in choices when c.matchedChars == mostMatched)
+	return [choices, mostMatched]
 
 class global.ActionChoiceSet
 	constructor: (@choices) -> 
@@ -101,26 +129,86 @@ class global.ActionChoiceSet
 	possibleMatches: (string) ->
 		# Remove withspace, and lower-case the string
 		string = filterPass string
-		wordNumber = 0
 		choices = @choices
-		longestWordLen = () ->
-			longest = 0
-			for choice in choices 
-				longest = Math.max(longest, choice.words.length)
-			return longest
 
-		while string != ""
-			[matchedComponent, newString] = actionGreedyMatch(string, wordNumber, choices)
-			string = newString # Update string
-			if matchedComponent == ""
-				# Can we possibly parse further using the next word?
-				if longestWordLen() <= wordNumber + 1
-					# No further parsing possible!
-					# Parsing incomplete, but return what we have now (may still be useful suggestions).
-					return [choices, false]
-			else
-				choices = filterChoices(matchedComponent, wordNumber, choices)
-			wordNumber++
-		choices = filterNonMinimalChoices(choices)
-		# Parsing-completed path. Returns multiple if string is so far ambiguous. 
-		return [choices, true]
+		# Set matching statistics for each string
+		choice.setMatchStats(string) for choice in choices
+
+		# Filter inferior matches
+		[choices, mostMatched] = filterShorterMatches(choices)
+
+		firstWordMatched = false
+		allWordsMatched = false
+		for choice in choices
+			if choice.firstWordMatched
+				firstWordMatched = true
+			if choice.matchedWords >= choice.words.length
+				allWordsMatched = true
+
+		# If none matched the first word, fail but return choices now
+		if not firstWordMatched
+			return [choices, false]
+
+		# Otherwise, filter choices without first word matched
+		choices = (c for c in choices when c.firstWordMatched)
+
+		# If a choice matched all words, filter all choices that don't match all words
+		if allWordsMatched
+			choices = (c for c in choices when c.matchedWords >= c.words.length)
+
+		# Return current choices, and whether parsing of the string was completed fully
+		parsingComplete = (mostMatched >= string.length)
+		return [choices, parsingComplete]
+
+
+		# Filter choices with less than maximum characters matched
+
+
+		# # Remove withspace, and lower-case the string
+		# string = filterPass string
+		# wordNumber = 0
+		# choices = @choices
+		# invalidated = false
+		# longestWordLen = () ->
+		# 	longest = 0
+		# 	for choice in choices 
+		# 		longest = Math.max(longest, choice.words.length)
+		# 	return longest
+
+		# choice._resetMatchCounts() for choice in choices
+		# while string != ""
+		# 	[matchedComponent, newString] = actionGreedyMatch(string, wordNumber, choices)
+		# 	string = newString # Update string
+		# 	if matchedComponent == ""
+		# 		# Don't allow skipping the first word:
+		# 		if wordNumber == 0
+		# 			invalidated = true
+
+		# 		# Can we possibly parse further using the next word?
+		# 		if longestWordLen() <= wordNumber + 1
+		# 			# No further parsing possible!
+		# 			# Parsing incomplete, but return what we have now (may still be useful suggestions).
+		# 			return [choices, false]
+		# 	else
+		# 		choices = filterChoices(matchedComponent, wordNumber, choices)
+		# 	choiceDescs = []
+		# 	for choice in choices
+		# 		choiceDescs.push choice.describe()
+		# 	console.log "choices #{matchedComponent} #{newString} #{choiceDescs.join "\n"}"
+		# 	wordNumber++
+		# # Does anything take up all the words?
+		# wordFullyParsed = false
+		# for choice in @choices 
+		# 	console.log "inprog #{wordNumber} vs #{choice.words.length} (#{choice.words})"
+		# 	if wordNumber >= choice.words.length
+		# 		wordFullyParsed = true
+		# 		break
+		# console.log "wordFullyParsed #{wordFullyParsed}"
+		# # Filter anything not fully parsed:
+		# if wordFullyParsed
+		# 	choices = filterNonMinimalChoices(choices)
+
+		# # Parsing-completed path. Returns multiple if string is so far ambiguous. 
+		# # May have been invalidated (ie not matching first word)
+		# # in which case we still show potential results of interest.
+		# return [choices, (not invalidated)]

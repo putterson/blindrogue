@@ -83,12 +83,20 @@ class global.ItemPickupAction extends MoveTowardsAction
             return
         return super(obj)
 
-class global.UseStairsAction extends MoveTowardsAction
-    constructor: (stairsObject, downStairs) ->
+class global.MoveToStairsAction extends MoveTowardsAction
+    constructor: (stairsObject, downStairs, useStairs) ->
         super(10, stairsObject, false)
         @stairsEntered = false
         @downStairs = downStairs
-    isComplete: (obj) -> @stairsEntered
+        @useStairs = useStairs
+    isComplete: (obj) -> 
+        if not @useStairs
+            return @onTarget(obj) 
+        return @stairsEntered
+    canPerform: (obj) ->
+        if not @useStairs and @onTarget(obj)
+            return [false, "You are already at the stairs!"]
+        return super(obj)
     perform: (obj) ->
         if @onTarget(obj)
             level = obj.map.level 
@@ -275,16 +283,17 @@ addStairsActions = (choices, map) ->
     for [x,y] in map.player.seenSqrs
         # Is it a downstaircase?
         {char} = map.get(x,y)
-        if char == '>' then seenStairs.push {x: x,y: y, solid: false, isDown: false, words: "Stairs up", getName: () -> "stairs up"}
-        if char == '<' then seenStairs.push {x: x,y: y, solid: false, isDown: true, words: "Stairs down", getName: () -> "stairs down"}
+        if char == '>' then seenStairs.push {x: x,y: y, solid: false, isDown: false, dir: "up", getName: () -> "stairs #{@dir}"}
+        if char == '<' then seenStairs.push {x: x,y: y, solid: false, isDown: true, dir: "down", getName: () -> "stairs #{@dir}"}
 
     # Holds stairs found in each direction
     directionBuckets = makeObjectDirBuckets map, seenStairs
     for dir in DIRECTIONS
         i = 1
         for doorObj in directionBuckets[dir]
-            words = "#{doorObj.words} #{dir} #{i}".split(" ")
-            choices.push new ActionChoice words, new UseStairsAction(doorObj, doorObj.isDown)
+            for [prefix, useStairs, desc] in [["Use stairs", true, "Go towards, and use, the staircase"], ["Move to stairs", false, "Go towards the staircase"]]
+                words = "#{prefix} #{doorObj.dir} #{dir} #{i}".split(" ")
+                choices.push new ActionChoice words, new MoveToStairsAction(doorObj, doorObj.isDown, useStairs), "#{prefix} #{doorObj.dir}:\n #{desc}."
             i++
 
 createActionChoiceSet = (map) ->
@@ -324,5 +333,6 @@ global.resolveAction = (map, string) ->
         # Show possible actions:
         return "Possibile matches: \n" + choiceDescs.join "\n"
     if choices.length == 1
+        choices[0].action.description = choices[0].describe()
         return choices[0].action
     return "Ambiguous action. Possibilities are: \n" + choiceDescs.join "\n"
