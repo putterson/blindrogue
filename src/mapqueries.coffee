@@ -99,7 +99,7 @@ global.objPathInDirection = (obj, dirX, dirY, lookAhead) ->
 	for y in [minY..maxY]
 		row = []
 		for x in [minX..maxX]
-			row.push {x, y, visited: false, open: false, distance: 1000, originNode: null, solid: (not map.wasSeen(x,y)) or map.isSolid(x,y)}
+			row.push {x, y, visited: false, open: false, distance: 1000, originNode: null, solid: map.wasSeen(x,y) and map.isSolid(x,y)}
 		grid.push row
 
 	openNodes = []
@@ -139,7 +139,7 @@ global.objPathInDirection = (obj, dirX, dirY, lookAhead) ->
 		node.open = false
 	# Find point that maximizes distance along the direction
 	maxScore = 0
-	maxNode = null
+	maxNodes = []
 	for row in grid
 		for node in row when node.visited
 			dX = (node.x - obj.x)
@@ -148,23 +148,32 @@ global.objPathInDirection = (obj, dirX, dirY, lookAhead) ->
 			# Penalize for moving in wrong dimension, just a bit
 			if dirX == 0 then score -= Math.abs(dX) / 100
 			if dirY == 0 then score -= Math.abs(dY) / 100
-			console.log "node #{node.x - obj.x}, #{node.y - obj.y}, #{score}, #{maxScore}, #{maxNode}"
-			if score > maxScore
+			console.log "node #{node.x - obj.x}, #{node.y - obj.y}, #{score}, #{maxScore}, #{maxNodes.length}"
+			if score == maxScore
+				maxNodes.push node
+			else if score > maxScore
 				maxScore = score
-				maxNode = node
+				maxNodes = [node]
 
 	# console.log "maxNode #{maxNode.x - obj.x}, #{maxNode.y - obj.y}, #{maxScore}"
-	if maxNode == null
+	if maxScore == 0 or maxNodes.length == 0
 		return null
-	# Back-track to first square moved to
-	node = maxNode
-	while true # Should return out of loop!
-		if node.originNode.originNode == null
-			return [node.x - obj.x, node.y - obj.y]
-		node = node.originNode
 
-global.objFreePathInDirection = (obj, dirX, dirY, lookAhead) ->
-	dir = objPathInDirection obj, dirX, dirY, lookAhead
-	if dir == null
-		return null
-	return objFindFreeDirection obj, dir[0], dir[1]
+	# Back-track to first square moved to
+	node = randChoose maxNodes
+	path = []
+	while true # Recreate the path
+		{originNode} = node
+		# Fully retraced path?
+		if originNode == null
+			break
+		path.push [node.x - originNode.x, node.y - originNode.y]
+		node = originNode
+	path.reverse()
+	return path
+
+# global.objFreePathInDirection = (obj, dirX, dirY, lookAhead) ->
+# 	dir = objPathInDirection obj, dirX, dirY, lookAhead
+# 	if dir == null
+# 		return null
+# 	return objFindFreeDirection obj, dir[0], dir[1]

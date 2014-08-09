@@ -22,20 +22,26 @@ passiveMoveActionInterrupted = (obj) ->
 
 class global.MoveAction
     constructor: (@nSteps, @dx, @dy, @wordsUsed) ->
-        @cachedPathDir = null
+        @path = null
+        @pathI = 0
     isInterrupted: (obj) -> passiveMoveActionInterrupted obj
     # No message attached because reason for isComplete should be 'obvious'
     isComplete: (obj) -> (@nSteps <= 0)
     canPerform: (obj) ->
         # Rely on canPerform being called before every perform
-        @cachedPathDir = objFreePathInDirection(obj, @dx, @dy, @nSteps+1)
-        if not @cachedPathDir?
-            return [false, describeBlockingSquare(obj.map, obj.x + @dx, obj.y + @dy)]
-        return [true]
+        if not @path? then @path = objPathInDirection(obj, @dx, @dy, @nSteps+1)
+        if @path? 
+            dir = @path[@pathI]
+            if dir? 
+                dir = objFindFreeDirection(obj, dir[0], dir[1])
+                if dir? 
+                    return [true]
+        return [false, describeBlockingSquare(obj.map, obj.x + @dx, obj.y + @dy)]
 
     perform: (obj) ->
         @nSteps--
-        [dx, dy] = @cachedPathDir
+        [dx, dy] = @path[@pathI++]
+        [dx, dy] = objFindFreeDirection(obj, dx, dy)
         wordsUsed = @wordsUsed
         obj.map.events.push {type: "PlayerMove", message: "You move #{dirToCompassDir dx, dy}."}
         obj.move(dx, dy)
